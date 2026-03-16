@@ -129,6 +129,8 @@
                 <button class="algo-tab active" onclick="showCategory('beginner')">Beginner</button>
                 <button class="algo-tab" onclick="showCategory('notation')">Notation</button>
                 <button class="algo-tab" onclick="showCategory('f2l')">F2L (41)</button>
+                <button class="algo-tab" onclick="showCategory('2lookpll')">2-Look PLL</button>
+                <button class="algo-tab" onclick="showCategory('2lookoll')">2-Look OLL</button>
                 <button class="algo-tab" onclick="showCategory('pll')">PLL (21)</button>
                 <button class="algo-tab" onclick="showCategory('oll')">OLL (57)</button>
             </div>
@@ -185,54 +187,38 @@
                 <div class="category-title">Cube Notation</div>
                 <p class="category-desc">Learn what each letter means in cube algorithms.</p>
 
-                <h5>Basic Face Moves</h5>
+                <h5>Basic Face Moves (Clockwise)</h5>
                 <div class="case-grid">
-                    <div class="case-card"><div class="case-info"><div class="case-name">R - Right</div><div class="case-moves">Turn the Right face clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">L - Left</div><div class="case-moves">Turn the Left face clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">U - Up</div><div class="case-moves">Turn the Up (top) face clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">D - Down</div><div class="case-moves">Turn the Down (bottom) face clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">F - Front</div><div class="case-moves">Turn the Front face clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">B - Back</div><div class="case-moves">Turn the Back face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/b174c36a-cfd0-49bf-b877-3741c6ace208/basic+moves+1.png" alt="R L U"></div><div class="case-info"><div class="case-name">R, L, U</div><div class="case-moves">Right, Left, Up clockwise</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/bc9f23ca-81a0-4fef-8636-69decd5bf0c2/basic+moves+2.png" alt="D F B"></div><div class="case-info"><div class="case-name">D, F, B</div><div class="case-moves">Down, Front, Back clockwise</div></div></div>
                 </div>
 
-                <h5>Prime Moves (Counterclockwise)</h5>
+                <h5>Prime Moves (Counterclockwise) & Double Moves</h5>
                 <div class="case-grid">
-                    <div class="case-card"><div class="case-info"><div class="case-name">R'</div><div class="case-moves">Turn Right face counterclockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">L'</div><div class="case-moves">Turn Left face counterclockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">U'</div><div class="case-moves">Turn Up face counterclockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">D'</div><div class="case-moves">Turn Down face counterclockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">F'</div><div class="case-moves">Turn Front face counterclockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">B'</div><div class="case-moves">Turn Back face counterclockwise</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/50f5601e-7550-4fec-ad25-156b18ecf41b/other+moves.png" alt="R' R2 r"></div><div class="case-info"><div class="case-name">R', R2, r</div><div class="case-moves">Prime = counterclockwise, 2 = 180°, lowercase = double layer</div></div></div>
                 </div>
 
-                <h5>Double Moves</h5>
+                <h5>Cube Rotations</h5>
                 <div class="case-grid">
-                    <div class="case-card"><div class="case-info"><div class="case-name">R2</div><div class="case-moves">Turn Right face 180° (half turn)</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">L2</div><div class="case-moves">Turn Left face 180° (half turn)</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">U2</div><div class="case-moves">Turn Up face 180° (half turn)</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">D2</div><div class="case-moves">Turn Down face 180° (half turn)</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">F2</div><div class="case-moves">Turn Front face 180° (half turn)</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">B2</div><div class="case-moves">Turn Back face 180° (half turn)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/23aa99ba-5da2-4f0f-b4ab-27188f4fb3e2/rotations.png" alt="x y z"></div><div class="case-info"><div class="case-name">x, y, z</div><div class="case-moves">Rotate entire cube on R, U, F axes</div></div></div>
                 </div>
 
-                <h5>Wide Moves</h5>
+                <h5>Slice Turns</h5>
                 <div class="case-grid">
-                    <div class="case-card"><div class="case-info"><div class="case-name">r</div><div class="case-moves">Right + M (right slice) clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">l</div><div class="case-moves">Left + M (left slice) clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">u</div><div class="case-moves">Up + E (middle layer) clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">d</div><div class="case-moves">Down + E (middle layer) clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">f</div><div class="case-moves">Front + S (standing) clockwise</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">b</div><div class="case-moves">Back + S (standing) clockwise</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/94021113-3fea-49d4-b608-295da1579f54/slice+turns.png" alt="M S E"></div><div class="case-info"><div class="case-name">M, S, E</div><div class="case-moves">M=between L/R, S=between F/B, E=between U/D</div></div></div>
                 </div>
 
-                <h5>Other Notations</h5>
+                <h5>Notation Reference</h5>
                 <div class="case-grid">
-                    <div class="case-card"><div class="case-info"><div class="case-name">M</div><div class="case-moves">Middle slice (between L and R)</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">E</div><div class="case-moves">Equator slice (between U and D)</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">S</div><div class="case-moves">Standing slice (between F and B)</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">x</div><div class="case-moves">Rotate entire cube on R axis</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">y</div><div class="case-moves">Rotate entire cube on U axis</div></div></div>
-                    <div class="case-card"><div class="case-info"><div class="case-name">z</div><div class="case-moves">Rotate entire cube on F axis</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">R - Right</div><div class="case-moves">Turn Right face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">L - Left</div><div class="case-moves">Turn Left face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">U - Up</div><div class="case-moves">Turn Up (top) face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">D - Down</div><div class="case-moves">Turn Down (bottom) face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">F - Front</div><div class="case-moves">Turn Front face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">B - Back</div><div class="case-moves">Turn Back face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">' (prime)</div><div class="case-moves">Counterclockwise turn</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">2 (double)</div><div class="case-moves">180° half turn</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">Lowercase</div><div class="case-moves">Double layer turn</div></div></div>
                 </div>
             </div>
 
@@ -297,6 +283,50 @@
                     <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+40.png" alt="PS4"></div><div class="case-info"><div class="case-name">Pieces in Slot 4</div><div class="case-moves">L' U' L U' L' U2 L</div></div></div>
                     <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+41.png" alt="PS5"></div><div class="case-info"><div class="case-name">Pieces in Slot 5</div><div class="case-moves">R U2 R' U' R U R'</div></div></div>
                     <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+42.png" alt="PS6"></div><div class="case-info"><div class="case-name">Pieces in Slot 6</div><div class="case-moves">L' U2 L U L' U' L</div></div></div>
+                </div>
+            </div>
+
+            <!-- 2-Look PLL -->
+            <div id="2lookpll" class="algo-category">
+                <div class="category-title">2-Look PLL</div>
+                <p class="category-desc">Simplified PLL - solve corners first, then edges. Only 6 cases!</p>
+
+                <h5>Step 1: Solve Corners</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/c0566d04-85f8-423e-bb1a-79f02b25972d/headlights.png" alt="Headlights"></div><div class="case-info"><div class="case-name">Headlights</div><div class="case-moves">Ua: (R U R' U) R' U' (R2 U' R') U R' U R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/67f2ff22-2a20-43ec-b7b2-e0026db461dc/no+headlights.png" alt="No Headlights"></div><div class="case-info"><div class="case-name">No Headlights</div><div class="case-moves">Ub: R' U R' U' (R3 U') R' U (R U R2)</div></div></div>
+                </div>
+
+                <h5>Step 2: Solve Edges</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/8bf43bd9-f797-4472-a218-655da04c66fc/ub.png" alt="Ua"></div><div class="case-info"><div class="case-name">Ua Perm</div><div class="case-moves">(R U R' U) R' U' (R2 U' R') U R' U R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/c30df8ec-36a2-4c47-9fe4-f78757c2cb70/ua.png" alt="Ub"></div><div class="case-info"><div class="case-name">Ub Perm</div><div class="case-moves">R' U R' U' (R3 U') R' U (R U R2)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/a7d28ba3-7de4-4303-ac44-7d67085051f0/h.png" alt="H"></div><div class="case-info"><div class="case-name">H Perm</div><div class="case-moves">M2 U' (M2 U2 M2) U' M2</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/337b5ec0-f150-4288-832c-11779b14081d/z.png" alt="Z"></div><div class="case-info"><div class="case-name">Z Perm</div><div class="case-moves">M' U' (M2 U') (M2 U') M' U2 M2</div></div></div>
+                </div>
+            </div>
+
+            <!-- 2-Look OLL -->
+            <div id="2lookoll" class="algo-category">
+                <div class="category-title">2-Look OLL</div>
+                <p class="category-desc">Simplified OLL - create yellow cross first, then orient corners. Only 10 cases!</p>
+
+                <h5>Step 1: Create Yellow Cross</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/863f9bb4-e1df-467d-be61-de0f7d44b418/dot.png" alt="Dot"></div><div class="case-info"><div class="case-name">Dot</div><div class="case-moves">F R U R' U' F' (twice)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/c429ec84-9b2d-445b-b33d-1e21d2fb6dc2/hook.png" alt="Hook"></div><div class="case-info"><div class="case-name">Hook</div><div class="case-moves">F R U R' U' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/0058000e-2d10-483e-8f53-dbee6853d596/line.png" alt="Line"></div><div class="case-info"><div class="case-name">Line</div><div class="case-moves">F R U R' U' F'</div></div></div>
+                </div>
+
+                <h5>Step 2: Orient Corners</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/d43941e8-68de-4412-b01e-cfd39617bb13/headlights.png" alt="Headlights"></div><div class="case-info"><div class="case-name">Headlights</div><div class="case-moves">R2 D (R' U2 R) D' (R' U2 R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f62d6d3a-af9f-4629-a2d7-81183da340c9/anti+sune.png" alt="Anti-Sune"></div><div class="case-info"><div class="case-name">Anti-Sune</div><div class="case-moves">R' U' R U' R' U2 R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/43801bf8-000a-4f95-afde-9eaae8d3b0b4/sune.png" alt="Sune"></div><div class="case-info"><div class="case-name">Sune</div><div class="case-moves">R U R' U R U2 R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/63f7dbfe-eb49-4408-9bad-74ed6ea100ce/cross+2.png" alt="Cross2"></div><div class="case-info"><div class="case-name">Cross (Solved)</div><div class="case-moves">(none - already solved!)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/a2881fd9-ffbc-40c1-8886-a505381478e4/cross.png" alt="Cross"></div><div class="case-info"><div class="case-name">Cross</div><div class="case-moves">R U2 (R2 U') (R2 U') R2 U2 R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/bb430263-ade1-4457-8bdb-fd55583a3ec8/kite.png" alt="Kite"></div><div class="case-info"><div class="case-name">Kite</div><div class="case-moves">(r U R' U') (r' F R F')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/0c2c0a9f-a349-42f1-bc40-b583948671b4/chameleon.png" alt="Chameleon"></div><div class="case-info"><div class="case-name">Chameleon</div><div class="case-moves">R U R' U R U2 R' F R U R' U' F'</div></div></div>
                 </div>
             </div>
 
