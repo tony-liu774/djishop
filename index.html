@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CubeMaster - 3×3 CFOP + Beginner Guide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #14141f;
+            --primary: #ff6b35;
+            --secondary: #00d4aa;
+            --tertiary: #7c5cff;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6a6a7a;
+            --border: #2a2a3a;
+            --border-light: #3a3a4a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'DM Sans', sans-serif; background-color: var(--bg); color: var(--text-primary); line-height: 1.6; }
+        h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; font-weight: 700; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+        .nav-container { display: flex; align-items: center; padding: 12px 20px; max-width: 1200px; margin: 0 auto; }
+        .logo { display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 20px; }
+        .logo-cube { width: 28px; height: 28px; background: linear-gradient(135deg, #ff6b35, #ff8f5a); border-radius: 5px; display: flex; align-items: center; justify-content: center; transform: rotate(-10deg); }
+        .hero { min-height: 50vh; display: flex; align-items: center; padding-top: 70px; background: radial-gradient(ellipse at 30% 20%, rgba(255, 107, 53, 0.1) 0%, transparent 50%); }
+        .hero-content { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+        .hero-text h1 { font-size: 42px; margin-bottom: 12px; background: linear-gradient(135deg, #fff, #bbb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-text p { color: var(--text-secondary); font-size: 15px; margin-bottom: 20px; max-width: 400px; }
+        .hero-stats { display: flex; gap: 24px; margin-bottom: 24px; }
+        .stat-number { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 11px; color: var(--text-muted); }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 13px; text-decoration: none; transition: all 0.2s; border: none; cursor: pointer; }
+        .btn-primary { background: linear-gradient(135deg, #ff6b35, #ff8f5a); color: white; }
+        .hero-cube { display: flex; justify-content: center; perspective: 1000px; }
+        .cube-scene { width: 180px; height: 180px; position: relative; transform-style: preserve-3d; animation: rotateCube 12s infinite linear; }
+        @keyframes rotateCube { 0% { transform: rotateX(-25deg) rotateY(0deg); } 100% { transform: rotateX(-25deg) rotateY(360deg); } }
+        .cube-face { position: absolute; width: 75px; height: 75px; border-radius: 6px; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 2px; padding: 3px; background: rgba(20, 20, 31, 0.9); }
+        .cube-face.front { transform: translateZ(37px); }
+        .cube-face.back { transform: rotateY(180deg) translateZ(37px); }
+        .cube-face.left { transform: rotateY(-90deg) translateZ(37px); }
+        .cube-face.right { transform: rotateY(90deg) translateZ(37px); }
+        .cube-face.top { transform: rotateX(90deg) translateZ(37px); }
+        .cube-face.bottom { transform: rotateX(-90deg) translateZ(37px); }
+        .cubie { border-radius: 2px; }
+        .cubie.white { background: #fff; }
+        .cubie.yellow { background: #ffd500; }
+        .cubie.red { background: #c41e3a; }
+        .cubie.orange { background: #ff5800; }
+        .cubie.blue { background: #0051ba; }
+        .cubie.green { background: #009b48; }
+        section { padding: 50px 0; }
+        .section-header { text-align: center; margin-bottom: 32px; }
+        .section-header h2 { font-size: 28px; margin-bottom: 10px; }
+        .section-header p { color: var(--text-secondary); font-size: 14px; }
+        .algo-section { background: var(--surface); }
+        .algo-tabs { display: flex; gap: 6px; justify-content: center; margin-bottom: 28px; flex-wrap: wrap; }
+        .algo-tab { padding: 8px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); font-weight: 500; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .algo-tab:hover { border-color: var(--primary); color: var(--text-primary); }
+        .algo-tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .algo-category { display: none; }
+        .algo-category.active { display: block; }
+        .category-title { font-size: 18px; margin-bottom: 4px; color: var(--primary); }
+        .category-desc { color: var(--text-secondary); margin-bottom: 16px; font-size: 13px; }
+        .case-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-bottom: 28px; }
+        .case-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; align-items: center; gap: 12px; }
+        .case-image { width: 50px; height: 50px; flex-shrink: 0; border-radius: 5px; overflow: hidden; background: var(--surface); }
+        .case-image img { width: 100%; height: 100%; object-fit: contain; }
+        .case-info { flex: 1; min-width: 0; }
+        .case-name { font-weight: 600; font-size: 12px; margin-bottom: 3px; }
+        .case-moves { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--secondary); word-break: break-all; line-height: 1.3; }
+        h5 { color: var(--text-secondary); margin: 20px 0 10px; font-size: 12px; font-weight: 500; }
+        footer { background: var(--surface); border-top: 1px solid var(--border); padding: 24px 0; text-align: center; color: var(--text-muted); font-size: 12px; }
+        @media (max-width: 768px) {
+            .hero-content { grid-template-columns: 1fr; text-align: center; }
+            .hero-text p { margin: 0 auto 20px; }
+            .hero-stats { justify-content: center; }
+            .hero-cube { order: -1; margin-bottom: 24px; }
+            .hero-text h1 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo"><div class="logo-cube">🎲</div>CubeMaster</div>
+        </div>
+    </nav>
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>3×3 CFOP</h1>
+                    <p>Beginner guide + PLL, OLL & F2L algorithm reference with real cube case images.</p>
+                    <div class="hero-stats">
+                        <div class="stat"><div class="stat-number">Beginner</div><div class="stat-label">Learn</div></div>
+                        <div class="stat"><div class="stat-number">41</div><div class="stat-label">F2L</div></div>
+                        <div class="stat"><div class="stat-number">21</div><div class="stat-label">PLL</div></div>
+                        <div class="stat"><div class="stat-number">57</div><div class="stat-label">OLL</div></div>
+                    </div>
+                    <a href="#algorithms" class="btn btn-primary">View Algorithms ↓</a>
+                </div>
+                <div class="hero-cube">
+                    <div class="cube-scene">
+                        <div class="cube-face front"><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie red"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div></div>
+                        <div class="cube-face back"><div class="cubie orange"></div><div class="cubie orange"></div><div class="cubie orange"></div><div class="cubie orange"></div><div class="cubie orange"></div><div class="cubie orange"></div><div class="cubie orange"></div><div class="cubie orange"></div><div class="cubie orange"></div></div>
+                        <div class="cube-face left"><div class="cubie green"></div><div class="cubie green"></div><div class="cubie green"></div><div class="cubie green"></div><div class="cubie green"></div><div class="cubie green"></div><div class="cubie green"></div><div class="cubie green"></div><div class="cubie green"></div></div>
+                        <div class="cube-face right"><div class="cubie blue"></div><div class="cubie blue"></div><div class="cubie blue"></div><div class="cubie blue"></div><div class="cubie blue"></div><div class="cubie blue"></div><div class="cubie blue"></div><div class="cubie blue"></div><div class="cubie blue"></div></div>
+                        <div class="cube-face top"><div class="cubie yellow"></div><div class="cubie yellow"></div><div class="cubie yellow"></div><div class="cubie yellow"></div><div class="cubie yellow"></div><div class="cubie yellow"></div><div class="cubie yellow"></div><div class="cubie yellow"></div><div class="cubie yellow"></div></div>
+                        <div class="cube-face bottom"><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div><div class="cubie white"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="algo-section" id="algorithms">
+        <div class="container">
+            <div class="section-header">
+                <h2>CFOP Algorithms</h2>
+                <p>Real cube case images from cube.academy</p>
+            </div>
+            <div class="algo-tabs">
+                <button class="algo-tab active" onclick="showCategory('beginner')">Beginner</button>
+                <button class="algo-tab" onclick="showCategory('notation')">Notation</button>
+                <button class="algo-tab" onclick="showCategory('f2l')">F2L (41)</button>
+                <button class="algo-tab" onclick="showCategory('pll')">PLL (21)</button>
+                <button class="algo-tab" onclick="showCategory('oll')">OLL (57)</button>
+            </div>
+
+            <!-- Beginner -->
+            <div id="beginner" class="algo-category active">
+                <div class="category-title">Learn to Solve a Rubik's Cube</div>
+                <p class="category-desc">Step-by-step guide for complete beginners. Learn the basics of solving a 3×3 cube.</p>
+
+                <h5>Step 1: Solve White Corners</h5>
+                <p class="category-desc" style="margin-bottom: 12px;">Find a white corner piece. Position it above the spot it needs to go, then apply the algorithm.</p>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/ea99daaf-e582-4c32-91d7-4dc47cc33573/beginner-method-corner-white-right.png" alt="White Right"></div><div class="case-info"><div class="case-name">White on Right</div><div class="case-moves">R U R' U'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/7dc701e4-c979-4c89-9022-a25d5eb25edc/beginner-method-corner-white-left.png" alt="White Left"></div><div class="case-info"><div class="case-name">White on Left</div><div class="case-moves">L' U' L U</div></div></div>
+                </div>
+
+                <h5>Step 2: Solve White Edges</h5>
+                <p class="category-desc" style="margin-bottom: 12px;">Match an edge to its center. Face it toward you and apply the algorithm.</p>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/1772762a-3688-4edb-b05e-52394df1fc5e/beginner-method-edge-right.png" alt="Edge Right"></div><div class="case-info"><div class="case-name">White needs to go Right</div><div class="case-moves">U (Righty Alg) → R U R' U'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/7068ab58-4c74-49b0-b46f-a35dedcfee0b/beginner-method-edge-left.png" alt="Edge Left"></div><div class="case-info"><div class="case-name">White needs to go Left</div><div class="case-moves">U' (Lefty Alg) → L' U' L U</div></div></div>
+                </div>
+
+                <h5>Step 3: Yellow Cross</h5>
+                <p class="category-desc" style="margin-bottom: 12px;">Look at the yellow edges and apply the correct algorithm:</p>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/5a04dfc7-00b5-42d1-806c-534ccfb87a12/beginner-method-yellow-line.png" alt="Yellow Line"></div><div class="case-info"><div class="case-name">Yellow Line</div><div class="case-moves">F R U R' U' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/613b53bd-c35d-4468-bc02-5ac87b24a001/beginner-method-yellow-hook.png" alt="Yellow Hook"></div><div class="case-info"><div class="case-name">Yellow Hook</div><div class="case-moves">F R U R' U' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/fc3972e9-efbc-4f41-b726-e68c81240b41/beginner-method-yellow-dot.png" alt="Yellow Dot"></div><div class="case-info"><div class="case-name">Yellow Dot</div><div class="case-moves">F R U R' U' F' (twice)</div></div></div>
+                </div>
+
+                <h5>Step 4: Solve Yellow Edges</h5>
+                <p class="category-desc" style="margin-bottom: 12px;">Align two yellow edges to their correct center:</p>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/34ae4e1d-026d-46a9-a627-0b072940f43b/beginner-method-yellow-edges-diagonal.png" alt="Adjacent Edges"></div><div class="case-info"><div class="case-name">Adjacent Edges</div><div class="case-moves">R U R' U R U2 R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/39787c51-e591-4df2-b522-87fc223ad02b/beginner-method-yellow-edges-sune.png" alt="Diagonal Edges"></div><div class="case-info"><div class="case-name">Diagonal Edges</div><div class="case-moves">R U R' U R U2 R' (twice)</div></div></div>
+                </div>
+
+                <h5>Step 5: Match Yellow Corners</h5>
+                <p class="category-desc" style="margin-bottom: 12px;">Bring yellow corners to their correct spot (matching the colors on the sides):</p>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/57ab5820-a06f-4a38-acbe-8759a7dec07f/beginner-method-yellow-corners-niklas.png" alt="Niklas"></div><div class="case-info"><div class="case-name">Niklas</div><div class="case-moves">R U' L' U R' U' L</div></div></div>
+                </div>
+
+                <h5>Step 6: Solve Yellow Corners</h5>
+                <p class="category-desc" style="margin-bottom: 12px;">1. Hold solved corner in bottom right 2. Apply Righty Alg until solved 3. Turn bottom layer 4. Repeat</p>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/0eab93ea-052a-4343-b28d-a9185ed99e28/beginner-method-yellow-corners-twist.png" alt="Corner Twist"></div><div class="case-info"><div class="case-name">Corner Twist</div><div class="case-moves">R U R' U'</div></div></div>
+                </div>
+            </div>
+
+            <!-- Notation -->
+            <div id="notation" class="algo-category">
+                <div class="category-title">Cube Notation</div>
+                <p class="category-desc">Learn what each letter means in cube algorithms.</p>
+
+                <h5>Basic Face Moves</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-info"><div class="case-name">R - Right</div><div class="case-moves">Turn the Right face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">L - Left</div><div class="case-moves">Turn the Left face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">U - Up</div><div class="case-moves">Turn the Up (top) face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">D - Down</div><div class="case-moves">Turn the Down (bottom) face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">F - Front</div><div class="case-moves">Turn the Front face clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">B - Back</div><div class="case-moves">Turn the Back face clockwise</div></div></div>
+                </div>
+
+                <h5>Prime Moves (Counterclockwise)</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-info"><div class="case-name">R'</div><div class="case-moves">Turn Right face counterclockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">L'</div><div class="case-moves">Turn Left face counterclockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">U'</div><div class="case-moves">Turn Up face counterclockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">D'</div><div class="case-moves">Turn Down face counterclockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">F'</div><div class="case-moves">Turn Front face counterclockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">B'</div><div class="case-moves">Turn Back face counterclockwise</div></div></div>
+                </div>
+
+                <h5>Double Moves</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-info"><div class="case-name">R2</div><div class="case-moves">Turn Right face 180° (half turn)</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">L2</div><div class="case-moves">Turn Left face 180° (half turn)</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">U2</div><div class="case-moves">Turn Up face 180° (half turn)</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">D2</div><div class="case-moves">Turn Down face 180° (half turn)</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">F2</div><div class="case-moves">Turn Front face 180° (half turn)</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">B2</div><div class="case-moves">Turn Back face 180° (half turn)</div></div></div>
+                </div>
+
+                <h5>Wide Moves</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-info"><div class="case-name">r</div><div class="case-moves">Right + M (right slice) clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">l</div><div class="case-moves">Left + M (left slice) clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">u</div><div class="case-moves">Up + E (middle layer) clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">d</div><div class="case-moves">Down + E (middle layer) clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">f</div><div class="case-moves">Front + S (standing) clockwise</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">b</div><div class="case-moves">Back + S (standing) clockwise</div></div></div>
+                </div>
+
+                <h5>Other Notations</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-info"><div class="case-name">M</div><div class="case-moves">Middle slice (between L and R)</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">E</div><div class="case-moves">Equator slice (between U and D)</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">S</div><div class="case-moves">Standing slice (between F and B)</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">x</div><div class="case-moves">Rotate entire cube on R axis</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">y</div><div class="case-moves">Rotate entire cube on U axis</div></div></div>
+                    <div class="case-card"><div class="case-info"><div class="case-name">z</div><div class="case-moves">Rotate entire cube on F axis</div></div></div>
+                </div>
+            </div>
+
+            <!-- F2L -->
+            <div id="f2l" class="algo-category">
+                <div class="category-title">F2L - First Two Layers <span class="count">41 Cases</span></div>
+                <p class="category-desc">Pair and insert corner-edge pieces into the first two layers.</p>
+                <h5>Easy Inserts</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3fc2829f-217e-4805-af33-19cc92c1e0e1/easy+insert01.png" alt="Easy1"></div><div class="case-info"><div class="case-name">White on Right</div><div class="case-moves">U (R U' R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/d9074574-d426-4991-96d6-25e053b4ab5d/easy+insert02.png" alt="Easy2"></div><div class="case-info"><div class="case-name">White on Left</div><div class="case-moves">U' (L' U L)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/57f7fe55-bfcd-4959-9ba6-9b8aae87ecd0/easy+insert03.png" alt="Easy3"></div><div class="case-info"><div class="case-name">Right Insert</div><div class="case-moves">(R U R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/b121bfb7-0483-4a64-b0d7-e77f43e7a991/easy+insert04.png" alt="Easy4"></div><div class="case-info"><div class="case-name">Left Insert</div><div class="case-moves">(L' U' L)</div></div></div>
+                </div>
+                <h5>Disconnected Pairs</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/880e7b53-7014-4f68-96c1-25301a6abf98/disconnected+01.png" alt="D1"></div><div class="case-info"><div class="case-name">Back Right</div><div class="case-moves">U' (R U R') [U2 R U' R']</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/5eb29119-bbab-430b-9b48-9f21dd94c9c6/disconnected+02.png" alt="D2"></div><div class="case-info"><div class="case-name">Back Left</div><div class="case-moves">U (L' U' L) [U2' L' U L]</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/64785391-a86a-4078-a711-67ce98ade934/disconnected+03.png" alt="D3"></div><div class="case-info"><div class="case-name">Front Right</div><div class="case-moves">U' (R U2' R') [U2 R U' R']</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/dfaa4efe-e4df-4819-ba96-ff1bc5b7adf1/disconnected+04.png" alt="D4"></div><div class="case-info"><div class="case-name">Front Left</div><div class="case-moves">U (L' U2 L) [U2' L' U L]</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/97e21113-24d4-4bca-8898-e5c6d91cb77d/disconnected+05.png" alt="D5"></div><div class="case-info"><div class="case-name">Side Right</div><div class="case-moves">U' (R U R') [U R U R']</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/11155752-3255-41ef-946a-2f5b789e9dbd/disconnected+06.png" alt="D6"></div><div class="case-info"><div class="case-name">Side Left</div><div class="case-moves">U (L' U' L) [U' L' U' L]</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/b4a86f32-a38c-4f6a-8f62-cbead7e2083b/disconnected+07.png" alt="D7"></div><div class="case-info"><div class="case-name">Front Right U</div><div class="case-moves">U (R U2' R') [U R U' R']</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/7b8e8b88-42d6-431b-94df-0404b9378d0c/disconnected+08.png" alt="D8"></div><div class="case-info"><div class="case-name">Front Left U'</div><div class="case-moves">U' (L' U2 L) [U' L' U L]</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/fbf60be9-8387-4676-8dea-51475468726f/disconnected+09.png" alt="D9"></div><div class="case-info"><div class="case-name">U2 Back Right</div><div class="case-moves">U2 (R U R') [U R U' R']</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/d496bbe2-1318-4aa1-9665-a542ff900ab8/disconnected+10.png" alt="D10"></div><div class="case-info"><div class="case-name">U2 Back Left</div><div class="case-moves">U2 (L' U' L) [U' L' U L]</div></div></div>
+                </div>
+                <h5>Corner in Slot</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/c1c13f4e-64b8-4494-b13e-eb35afad9f1a/corner+ins+slot01.png" alt="C1"></div><div class="case-info"><div class="case-name">Right Back</div><div class="case-moves">U' (R' F R F') [R U R']</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/c47e962c-0479-4b86-a4d7-08232d54fb58/corner+ins+slot02.png" alt="C2"></div><div class="case-info"><div class="case-name">Left Back</div><div class="case-moves">U (L F' L' F) [L' U' L]</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/5790be8e-eaef-421a-8956-355ccbdc6587/corner+ins+slot03.png" alt="C3"></div><div class="case-info"><div class="case-name">Right Front</div><div class="case-moves">(R U' R') [U R U' R']</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3ca1ff99-2b47-4944-8938-bf0a331a0fbd/corner+ins+slot04.png" alt="C4"></div><div class="case-info"><div class="case-name">Left Front</div><div class="case-moves">(L' U L) [U' L' U L]</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/9488df6b-2206-441f-9934-04bb7cdd3a26/corner+ins+slot05.png" alt="C5"></div><div class="case-info"><div class="case-name">Right Misoriented</div><div class="case-moves">(R U R') [U' R U R']</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/5824af39-f28a-41b7-ae0a-7467ff297851/corner+ins+slot06.png" alt="C6"></div><div class="case-info"><div class="case-name">Left Misoriented</div><div class="case-moves">(L' U' L) [U L' U' L]</div></div></div>
+                </div>
+                <h5>Edge in Slot</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+21.png" alt="E1"></div><div class="case-info"><div class="case-name">Edge in Slot 1</div><div class="case-moves">U' R U R' U2 (R U' R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+22.png" alt="E2"></div><div class="case-info"><div class="case-name">Edge in Slot 2</div><div class="case-moves">U L' U' L U2 (L' U L)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+23.png" alt="E3"></div><div class="case-info"><div class="case-name">Edge in Slot 3</div><div class="case-moves">U' R U2 R' U2 (R U' R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+24.png" alt="E4"></div><div class="case-info"><div class="case-name">Edge in Slot 4</div><div class="case-moves">U L' U2 L U2 (L' U L)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+25.png" alt="E5"></div><div class="case-info"><div class="case-name">Edge in Slot 5</div><div class="case-moves">R U R' U R U' R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+26.png" alt="E6"></div><div class="case-info"><div class="case-name">Edge in Slot 6</div><div class="case-moves">L' U' L U' L' U L</div></div></div>
+                </div>
+                <h5>Connected Pairs</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+27.png" alt="CP1"></div><div class="case-info"><div class="case-name">Connected Pair 1</div><div class="case-moves">(R U' R') U (R U R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+28.png" alt="CP2"></div><div class="case-info"><div class="case-name">Connected Pair 2</div><div class="case-moves">(L' U L) U' (L' U' L)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+29.png" alt="CP3"></div><div class="case-info"><div class="case-name">Connected Pair 3</div><div class="case-moves">U (R U' R') (R U R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+30.png" alt="CP4"></div><div class="case-info"><div class="case-name">Connected Pair 4</div><div class="case-moves">U' (L' U L) (L' U' L)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+31.png" alt="CP5"></div><div class="case-info"><div class="case-name">Connected Pair 5</div><div class="case-moves">R U2 R' U' (R U' R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+32.png" alt="CP6"></div><div class="case-info"><div class="case-name">Connected Pair 6</div><div class="case-moves">L' U2 L U (L' U L)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+33.png" alt="CP7"></div><div class="case-info"><div class="case-name">Connected Pair 7</div><div class="case-moves">U R U2 R' U (R U' R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+34.png" alt="CP8"></div><div class="case-info"><div class="case-name">Connected Pair 8</div><div class="case-moves">U' L' U2 L U' (L' U L)</div></div></div>
+                </div>
+                <h5>Pieces in Slot</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+37.png" alt="PS1"></div><div class="case-info"><div class="case-name">Pieces in Slot 1</div><div class="case-moves">R U' R' U' R U R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+38.png" alt="PS2"></div><div class="case-info"><div class="case-name">Pieces in Slot 2</div><div class="case-moves">L' U L U L' U' L</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+39.png" alt="PS3"></div><div class="case-info"><div class="case-name">Pieces in Slot 3</div><div class="case-moves">R U R' U R U2 R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+40.png" alt="PS4"></div><div class="case-info"><div class="case-name">Pieces in Slot 4</div><div class="case-moves">L' U' L U' L' U2 L</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+41.png" alt="PS5"></div><div class="case-info"><div class="case-name">Pieces in Slot 5</div><div class="case-moves">R U2 R' U' R U R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f2l+42.png" alt="PS6"></div><div class="case-info"><div class="case-name">Pieces in Slot 6</div><div class="case-moves">L' U2 L U L' U' L</div></div></div>
+                </div>
+            </div>
+
+            <!-- PLL -->
+            <div id="pll" class="algo-category">
+                <div class="category-title">PLL - Permute Last Layer <span class="count">21 Algorithms</span></div>
+                <p class="category-desc">Arrange the last layer pieces without changing orientation.</p>
+                <h5>Edge-Only PLLs</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/41466d7e-511f-4484-8faa-51468e6065bc/PLL+02.png" alt="Ua"></div><div class="case-info"><div class="case-name">Ua Perm</div><div class="case-moves">(R U R' U) R' U' (R2 U' R') U R' U R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/4ff6d00c-dabf-40a1-b508-0890f29b1e0e/PLL+01.png" alt="Ub"></div><div class="case-info"><div class="case-name">Ub Perm</div><div class="case-moves">R' U R' U' (R3 U') R' U (R U R2)</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/205be9b3-3d05-44fd-808b-ec0885944ad7/PLL+04.png" alt="H"></div><div class="case-info"><div class="case-name">H Perm</div><div class="case-moves">M2 U' (M2 U2 M2) U' M2</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/776ab9b1-69eb-466a-b8b1-c48b9fecc021/PLL+03.png" alt="Z"></div><div class="case-info"><div class="case-name">Z Perm</div><div class="case-moves">M' U' (M2 U') (M2 U') M' U2 M2</div></div></div>
+                </div>
+                <h5>Corner-Only PLLs</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/481455c7-ae37-49b2-aef2-e1225df8343c/PLL+06.png" alt="Aa"></div><div class="case-info"><div class="case-name">Aa Perm</div><div class="case-moves">x R2 D2 (R U R') D2 (R U' R) x'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/6f9e4184-03e8-4758-92e4-d8f0b6752f46/PLL+05.png" alt="Ab"></div><div class="case-info"><div class="case-name">Ab Perm</div><div class="case-moves">x (R' U R') D2 (R U' R') D2 R2 x'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/a5f912d2-b9a3-423a-87dc-62ae528a472c/PLL+07.png" alt="E"></div><div class="case-info"><div class="case-name">E Perm</div><div class="case-moves">x' (R U' R') D (R U R') D' (R U R') D (R U' R') D' x</div></div></div>
+                </div>
+                <h5>Adjacent Corner Swaps</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f61df290-3f93-43f7-b6e5-cb274e657d48/PLL+10.png" alt="Ja"></div><div class="case-info"><div class="case-name">Ja Perm</div><div class="case-moves">(R U R' U') R' F (R2 U' R') U' (R U R' F')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/03ee2988-4482-4192-9f04-0482430f267f/PLL+09.png" alt="Jb"></div><div class="case-info"><div class="case-name">Jb Perm</div><div class="case-moves">R' U' F' (R U R' U') R' F (R2 U' R') U' R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/0a904314-d4c7-40ef-a8fd-6cc0add5ba19/PLL+11.png" alt="T"></div><div class="case-info"><div class="case-name">T Perm</div><div class="case-moves">R U R' F' (R U R' U') R' F (R2 U' R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/0fbcece9-9230-43f4-96f7-abac160c08b5/PLL+12.png" alt="Ra"></div><div class="case-info"><div class="case-name">Ra Perm</div><div class="case-moves">R U' R' U' R U R D (R' U' R D') R' U2 R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/9d3010c4-3773-4e15-a9e0-cdc29f53310b/PLL+13.png" alt="Rb"></div><div class="case-info"><div class="case-name">Rb Perm</div><div class="case-moves">(R' U2 R U2) R' F (R U R' U') R' F' R2</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/ee28a514-142c-4289-81c0-d006e1e0b18b/PLL+08.png" alt="F"></div><div class="case-info"><div class="case-name">F Perm</div><div class="case-moves">R U R' U' R' F R2 U' R' U' R U R' F'</div></div></div>
+                </div>
+                <h5>Diagonal Corner Swaps</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/a68d7a65-b0cf-4456-b57d-d9732a5328b3/PLL+20.png" alt="Y"></div><div class="case-info"><div class="case-name">Y Perm</div><div class="case-moves">F (R U' R' U') R U R' F' (R U R' U') R' F R F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/29e71bbf-f6e7-4da9-8981-331893d5def7/PLL+18.png" alt="Na"></div><div class="case-info"><div class="case-name">Na Perm</div><div class="case-moves">(R U R' U) R U R' F' (R U R' U') R' F (R2 U' R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/8283828f-246d-4eed-8830-f2dbfa4b9b34/PLL+19.png" alt="Nb"></div><div class="case-info"><div class="case-name">Nb Perm</div><div class="case-moves">(R' U R U') R' (F' U' F) R U (R' U' R U') f R f'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/98f7b985-c055-4ca5-bcd3-20334d6769c4/PLL+21.png" alt="V"></div><div class="case-info"><div class="case-name">V Perm</div><div class="case-moves">R' U R' U' R B' R' U2 R U B U' R' U2 R</div></div></div>
+                </div>
+                <h5>G-Perms</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/463d97f4-4f55-4dba-add5-0f69585096ce/PLL+14.png" alt="Ga"></div><div class="case-info"><div class="case-name">Ga Perm</div><div class="case-moves">R2 U R' U R' U' R U' R2 U' R U R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/463d97f4-4f55-4dba-add5-0f69585096ce/PLL+15.png" alt="Gb"></div><div class="case-info"><div class="case-name">Gb Perm</div><div class="case-moves">R' U' R U' R U R2 U R U2 R' U R U2 R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/463d97f4-4f55-4dba-add5-0f69585096ce/PLL+16.png" alt="Gc"></div><div class="case-info"><div class="case-name">Gc Perm</div><div class="case-moves">R2 U' R U' R U R' U R2 U R' U' R' U R' U R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/463d97f4-4f55-4dba-add5-0f69585096ce/PLL+17.png" alt="Gd"></div><div class="case-info"><div class="case-name">Gd Perm</div><div class="case-moves">R U R' U' R' U R2 U' R' U' R' U R' U2 R U' R</div></div></div>
+                </div>
+            </div>
+
+            <!-- OLL -->
+            <div id="oll" class="algo-category">
+                <div class="category-title">OLL - Orient Last Layer <span class="count">57 Algorithms</span></div>
+                <p class="category-desc">Make the entire last layer the same color.</p>
+                <h5>Sune Cases</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/43801bf8-000a-4f95-afde-9eaae8d3b0b4/sune.png" alt="Sune"></div><div class="case-info"><div class="case-name">Sune - OLL 33</div><div class="case-moves">R U R' U R U2 R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f62d6d3a-af9f-4629-a2d7-81183da340c9/anti+sune.png" alt="Anti-Sune"></div><div class="case-info"><div class="case-name">Anti-Sune - OLL 34</div><div class="case-moves">R' U' R U' R' U2 R</div></div></div>
+                </div>
+                <h5>H & Pi Cases</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/6871e68d-1c21-48ca-8a23-13598d8b1f1b/oll+50.png" alt="H"></div><div class="case-info"><div class="case-name">H Case - OLL 55</div><div class="case-moves">R U R' U R U2 R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/ac33a339-c634-4f62-9e6c-78b526378a98/oll+46.png" alt="Pi"></div><div class="case-info"><div class="case-name">Pi Case - OLL 47</div><div class="case-moves">R U2 R2 U' R2 U' R2 U2 R</div></div></div>
+                </div>
+                <h5>T Shapes</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/83430765-fb24-430d-a49d-1e3b08231c8a/oll+09.png" alt="T1"></div><div class="case-info"><div class="case-name">T Case - OLL 9</div><div class="case-moves">r U r' U' r' F r2 U' r' U' r U r' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/4df98682-157a-4442-9d0b-b21b90f86bba/oll+08.png" alt="T2"></div><div class="case-info"><div class="case-name">T Case - OLL 8</div><div class="case-moves">R U R' U' R' F R F'</div></div></div>
+                </div>
+                <h5>Block Shapes</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/95ebab14-4741-449e-ae06-b5d47727b9e4/oll+11.png" alt="Block1"></div><div class="case-info"><div class="case-name">Block - OLL 11</div><div class="case-moves">R' F R2 U' R' U F' R U R2</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/9018fe3a-49db-4494-8fe3-147140ee978b/oll+10.png" alt="Block2"></div><div class="case-info"><div class="case-name">Block - OLL 10</div><div class="case-moves">R U R2 U' R' F R U R U2 R'</div></div></div>
+                </div>
+                <h5>Edges Only</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/5b653966-2693-42f4-aaa1-7592201ea120/oll+12.png" alt="Edges1"></div><div class="case-info"><div class="case-name">Edges - OLL 12</div><div class="case-moves">F (R U R' U') F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/b20a94b3-6171-4865-93d4-2151bb2b587d/oll+13.png" alt="Edges2"></div><div class="case-info"><div class="case-name">Edges - OLL 13</div><div class="case-moves">F' (L' U' L U) F</div></div></div>
+                </div>
+                <h5>Fish & P Shapes</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+26.png" alt="Fish"></div><div class="case-info"><div class="case-name">Fish - OLL 26</div><div class="case-moves">R U2 R' U' R U' R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3915322b-61be-4b17-a5b5-c8bc43980347/oll+20.png" alt="P"></div><div class="case-info"><div class="case-name">P Case - OLL 20</div><div class="case-moves">R' U' F' U F R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3a8f49b0-b93e-4a01-9327-f01af7b7e771/oll+24.png" alt="C"></div><div class="case-info"><div class="case-name">C Case - OLL 24</div><div class="case-moves">R U R' U' x D' R U R' D R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/92afe240-5e9a-47a2-9a52-d341ae9f5e70/oll+36.png" alt="W"></div><div class="case-info"><div class="case-name">W Case - OLL 36</div><div class="case-moves">R U R' U R U' R' U' R' F R F'</div></div></div>
+                </div>
+                <h5>Lightning & L</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/24950fb5-4e3c-4c37-bdf0-9e0687416522/oll+14.png" alt="Lightning"></div><div class="case-info"><div class="case-name">Lightning - OLL 14</div><div class="case-moves">r U r' U R U2 r</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/8b24ee96-cc71-4bff-9e0a-3db1a1a1305b/oll+42.png" alt="L"></div><div class="case-info"><div class="case-name">L Case - OLL 42</div><div class="case-moves">r' U' r U' r' F r2 U' r' U' r U r' F'</div></div></div>
+                </div>
+                <h5>Cross Cases</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/a2881fd9-ffbc-40c1-8886-a505381478e4/cross.png" alt="Cross"></div><div class="case-info"><div class="case-name">Cross - OLL 22</div><div class="case-moves">R U2 (R2 U') (R2 U') R2 U2 R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/63f7dbfe-eb49-4408-9bad-74ed6ea100ce/cross+2.png" alt="Cross2"></div><div class="case-info"><div class="case-name">Cross+2 - OLL 23</div><div class="case-moves">R U R' U (R U2 R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/d43941e8-68de-4412-b01e-cfd39617bb13/headlights.png" alt="Headlights"></div><div class="case-info"><div class="case-name">Headlights - OLL 44</div><div class="case-moves">R2 D (R' U2 R) D' (R' U2 R')</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/bb430263-ade1-4457-8bdb-fd55583a3ec8/kite.png" alt="Kite"></div><div class="case-info"><div class="case-name">Kite - OLL 31</div><div class="case-moves">(r U R' U') (r' F R F')</div></div></div>
+                </div>
+                <h5>More OLL Cases</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/25e9e6ca-6ba3-4088-aea6-91140bca436d/oll+05.png" alt="OLL5"></div><div class="case-info"><div class="case-name">OLL 5</div><div class="case-moves">r U r' U2 r U' r' U' r U' r'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/57f34e1f-0e0b-4f64-9a5e-15a7d2731116/oll+06.png" alt="OLL6"></div><div class="case-info"><div class="case-name">OLL 6</div><div class="case-moves">r' U' r U2 r' U r U r' U r</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/f11c5aef-44a0-4551-88d3-72b128e350fb/oll+15.png" alt="OLL15"></div><div class="case-info"><div class="case-name">OLL 15</div><div class="case-moves">R' F' r U r' F R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/d40526a3-f73e-4e35-9430-aa69d8c56e9a/oll+16.png" alt="OLL16"></div><div class="case-info"><div class="case-name">OLL 16</div><div class="case-moves">r U r' F R' F' r</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/6a24a1bc-1768-4ac4-969b-46a9f2394f01/oll+30.png" alt="OLL30"></div><div class="case-info"><div class="case-name">OLL 30 - Hook</div><div class="case-moves">r U R' U R U2 r'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/260ef5f1-887c-4989-8233-5fe8d8889c37/oll+38.png" alt="OLL38"></div><div class="case-info"><div class="case-name">OLL 38 - Line</div><div class="case-moves">r' U' r U' r' F r2 U' r' U' r U r' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/6871e68d-1c21-48ca-8a23-13598d8b1f1b/oll+50.png" alt="OLL50"></div><div class="case-info"><div class="case-name">OLL 50 - Dot</div><div class="case-moves">R U2 R2 U' R2 U' R2 U2 R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/ac33a339-c634-4f62-9e6c-78b526378a98/oll+46.png" alt="OLL46"></div><div class="case-info"><div class="case-name">OLL 46 - Awkward</div><div class="case-moves">R U R' U R U2 R' F R U R' U' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3915322b-61be-4b17-a5b5-c8bc43980347/oll+17.png" alt="OLL17"></div><div class="case-info"><div class="case-name">OLL 17</div><div class="case-moves">R U2 R' U' R U' R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3915322b-61be-4b17-a5b5-c8bc43980347/oll+18.png" alt="OLL18"></div><div class="case-info"><div class="case-name">OLL 18</div><div class="case-moves">R' U2 R U R' U R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3915322b-61be-4b17-a5b5-c8bc43980347/oll+19.png" alt="OLL19"></div><div class="case-info"><div class="case-name">OLL 19</div><div class="case-moves">r U R' U' r' F R F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3915322b-61be-4b17-a5b5-c8bc43980347/oll+21.png" alt="OLL21"></div><div class="case-info"><div class="case-name">OLL 21</div><div class="case-moves">R' F' r U r' F R</div></div></div>
+                </div>
+                <h5>Additional OLL Cases</h5>
+                <div class="case-grid">
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/3915322b-61be-4b17-a5b5-c8bc43980347/oll+25.png" alt="OLL25"></div><div class="case-info"><div class="case-name">OLL 25</div><div class="case-moves">R U2 R' U' R U' R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+27.png" alt="OLL27"></div><div class="case-info"><div class="case-name">OLL 27</div><div class="case-moves">R U R' U R U2 R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+28.png" alt="OLL28"></div><div class="case-info"><div class="case-name">OLL 28</div><div class="case-moves">R' U' R U' R' U2 R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+29.png" alt="OLL29"></div><div class="case-info"><div class="case-name">OLL 29</div><div class="case-moves">r U R' U' r' F R F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+32.png" alt="OLL32"></div><div class="case-info"><div class="case-name">OLL 32</div><div class="case-moves">r' U' r U r' F r2 U' r'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+35.png" alt="OLL35"></div><div class="case-info"><div class="case-name">OLL 35</div><div class="case-moves">R U R' U' R' F R F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+37.png" alt="OLL37"></div><div class="case-info"><div class="case-name">OLL 37</div><div class="case-moves">R' F' R U R' U' F</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+39.png" alt="OLL39"></div><div class="case-info"><div class="case-name">OLL 39</div><div class="case-moves">R U2 R' U' R U' R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+40.png" alt="OLL40"></div><div class="case-info"><div class="case-name">OLL 40</div><div class="case-moves">R' U2 R U R' U R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+41.png" alt="OLL41"></div><div class="case-info"><div class="case-name">OLL 41</div><div class="case-moves">R U2 R' U2 R' F R F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+43.png" alt="OLL43"></div><div class="case-info"><div class="case-name">OLL 43</div><div class="case-moves">F R U R' U' R U R' U' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+45.png" alt="OLL45"></div><div class="case-info"><div class="case-name">OLL 45</div><div class="case-moves">R' U' R U' R' F R F' U R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+47.png" alt="OLL47"></div><div class="case-info"><div class="case-name">OLL 47</div><div class="case-moves">R U2 R2 U' R2 U' R2 U2 R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+48.png" alt="OLL48"></div><div class="case-info"><div class="case-name">OLL 48</div><div class="case-moves">R U R' U R U2 R'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+51.png" alt="OLL51"></div><div class="case-info"><div class="case-name">OLL 51</div><div class="case-moves">R2 D' R U2 R' D R U2 R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+52.png" alt="OLL52"></div><div class="case-info"><div class="case-name">OLL 52</div><div class="case-moves">R U R' U' R' F R2 U' R' U' R U R' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+53.png" alt="OLL53"></div><div class="case-info"><div class="case-name">OLL 53</div><div class="case-moves">R' U' R U' R' F R2 U R' U R U' R' F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+54.png" alt="OLL54"></div><div class="case-info"><div class="case-name">OLL 54</div><div class="case-moves">R U R' U R U' R' U' R' F R F'</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+56.png" alt="OLL56"></div><div class="case-info"><div class="case-name">OLL 56</div><div class="case-moves">R' U' R U R' F' R U R' U' R</div></div></div>
+                    <div class="case-card"><div class="case-image"><img src="https://images.squarespace-cdn.com/content/v1/668fde52a2afec107b57bdda/31b15ec3-52c9-4e13-88fd-f37578897119/oll+57.png" alt="OLL57"></div><div class="case-info"><div class="case-name">OLL 57</div><div class="case-moves">R U R' U' R' F R F' R U R' U'</div></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer>
+        <div class="container">
+            <p>© 2026 CubeMaster - Beginner Guide + 3×3 CFOP Algorithms</p>
+        </div>
+    </footer>
+    <script>
+        function showCategory(category) {
+            document.querySelectorAll('.algo-category').forEach(cat => cat.classList.remove('active'));
+            document.querySelectorAll('.algo-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(category).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
