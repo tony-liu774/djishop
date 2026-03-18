@@ -4,14 +4,14 @@
 Enable users to discover and import sheet music through two primary channels: sheet music search (via legal APIs like MuseScore) for accessing licensed public domain and authorized sheet music, and OMR (Optical Music Recognition) for scanning physical sheet music or images.
 
 ## Scope
-- Backend proxy integration for IMSLP search
+- Backend API integration for legal sheet music search
 - OMR preprocessing pipeline communicating with backend Audiveris service
 - Sheet music storage and parsing (MusicXML, MEI formats)
 - Basic library management UI
 
 ## Prerequisites
 - **Milestone 0 (Backend Infrastructure)** must be completed first
-- Frontend connects to backend API endpoints for OMR and IMSLP
+- Frontend connects to backend API endpoints for OMR and Sheet Music Search
 
 ---
 
@@ -77,7 +77,7 @@ Build an image upload pipeline for scanning sheet music, including preprocessing
 - [ ] Mobile camera capture works on iOS and Android
 
 ### Depends On
-- Milestone 0.2 (Audiveris OMR Service)
+- Task 0.2 (Audiveris OMR Service)
 
 ### Agent Type
 - Coder
@@ -162,7 +162,7 @@ Create the user interface for managing the user's sheet music collection includi
 - [ ] Import from local file system works
 
 ### Depends On
-- Task 1.1 (IMSLP integration adds scores)
+- Task 1.1 (Sheet Music Search Integration adds scores)
 - Task 1.2 (OMR adds scores)
 - Task 1.3 (Data model for display)
 
