@@ -39,8 +39,8 @@ app.use(rateLimiter);
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Serve static files (frontend)
-app.use(express.static('public'));
+// Serve static files (frontend) - root directory for PWA
+app.use(express.static('.', { index: 'index.html' }));
 
 // Health check routes
 app.use('/health', healthRoutes);
