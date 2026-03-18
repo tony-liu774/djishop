@@ -1,23 +1,32 @@
 # Milestone 1: Song Ingestion
 
 ## Goal
-Enable users to discover and import sheet music through two primary channels: IMSLP search integration for accessing the International Music Score Library Project catalog, and OMR (Optical Music Recognition) for scanning physical sheet music or images.
+Enable users to discover and import sheet music through two primary channels: IMSLP search (via backend proxy) for accessing the International Music Score Library Project catalog, and OMR (Optical Music Recognition) for scanning physical sheet music or images.
 
 ## Scope
-- IMSLP API integration for score search and download
-- OMR preprocessing pipeline for image uploads
+- Backend proxy integration for IMSLP search
+- OMR preprocessing pipeline communicating with backend Audiveris service
 - Sheet music storage and parsing (MusicXML, MEI formats)
 - Basic library management UI
+
+## Prerequisites
+- **Milestone 0 (Backend Infrastructure)** must be completed first
+- Frontend connects to backend API endpoints for OMR and IMSLP
 
 ---
 
 ## Task 1.1: IMSLP Search Integration
 
 ### Description
-Integrate with IMSLP's public API to allow users to search for and download public domain sheet music. Build search UI with filters for composer, instrument, and difficulty.
+Integrate with the backend IMSLP proxy endpoint to allow users to search for and download public domain sheet music. Build search UI with filters for composer, instrument, and difficulty.
+
+### Technical Notes
+- IMSLP has no public API - we use backend Puppeteer scraping (see Milestone 0.3)
+- Frontend makes requests to our backend `/api/imslp/search` endpoint
+- Results are cached on backend for performance
 
 ### Subtasks
-1. Create `js/services/imslp-client.js` - API client for IMSLP search endpoints
+1. Create `js/services/imslp-client.js` - HTTP client for backend IMSLP proxy
 2. Build search form UI with filters (composer, instrument, opus number)
 3. Implement search results display with pagination
 4. Add score preview functionality
@@ -25,14 +34,14 @@ Integrate with IMSLP's public API to allow users to search for and download publ
 6. Create library storage service using IndexedDB
 
 ### Acceptance Criteria
-- [ ] User can search IMSLP by composer name
+- [ ] User can search by composer name via backend proxy
 - [ ] Search results display with title, composer, and download options
 - [ ] MusicXML/MEI files can be downloaded and stored locally
 - [ ] Library view shows all imported scores
-- [ ] Search returns results within 3 seconds
+- [ ] Search returns results within 5 seconds (includes backend scraping)
 
 ### Depends On
-- None
+- Milestone 0.3 (IMSLP Proxy Service)
 
 ### Agent Type
 - Coder
@@ -42,25 +51,31 @@ Integrate with IMSLP's public API to allow users to search for and download publ
 ## Task 1.2: OMR Sheet Music Scanner
 
 ### Description
-Build an image upload pipeline for scanning sheet music, including preprocessing and communication with Audiveris OMR service (or local processing fallback).
+Build an image upload pipeline for scanning sheet music, including preprocessing and communication with backend Audiveris OMR service.
+
+### Technical Notes
+- OMR is performed server-side via Audiveris (see Milestone 0.2)
+- Frontend uploads images to backend `/api/omr/process` endpoint
+- Processing takes 10-60 seconds depending on complexity
 
 ### Subtasks
-1. Create `js/services/omr-uploader.js` - Image upload and preprocessing
+1. Create `js/services/omr-uploader.js` - Image upload to backend
 2. Build camera capture UI for mobile devices
-3. Implement image preprocessing (deskew, contrast enhancement)
-4. Create Audiveris integration layer for OMR processing
-5. Handle MusicXML output from Audiveris
+3. Implement client-side image preprocessing (deskew, contrast enhancement)
+4. Create progress indicator for long-running OMR jobs
+5. Handle MusicXML output from backend Audiveris service
 6. Add fallback manual entry for simple scores
 
 ### Acceptance Criteria
 - [ ] User can upload images via file picker or camera
-- [ ] Images are preprocessed before OMR (deskew, enhance)
-- [ ] Audiveris processes images and returns MusicXML
+- [ ] Images are preprocessed before upload (deskew, enhance)
+- [ ] Backend Audiveris processes images and returns MusicXML
+- [ ] Progress indicator shows during OMR processing
 - [ ] Scored sheet music appears in user library
 - [ ] Mobile camera capture works on iOS and Android
 
 ### Depends On
-- None
+- Milestone 0.2 (Audiveris OMR Service)
 
 ### Agent Type
 - Coder
@@ -88,8 +103,8 @@ Define comprehensive data structures for representing parsed sheet music includi
 - [ ] Model validates imported data integrity
 
 ### Depends On
-- Task 1.1 (IMSLP integration provides test data)
-- Task 1.2 (OMR provides test data)
+- Task 0.3 (IMSLP Proxy Service - provides search API)
+- Task 0.2 (Audiveris OMR Service - provides OMR API)
 
 ### Agent Type
 - Coder
@@ -148,6 +163,10 @@ Create the user interface for managing the user's sheet music collection includi
 - Task 1.1 (IMSLP integration adds scores)
 - Task 1.2 (OMR adds scores)
 - Task 1.3 (Data model for display)
+
+### Notes
+- All external integrations use backend endpoints from Milestone 0
+- Frontend never directly calls IMSLP or runs Audiveris
 
 ### Agent Type
 - Coder

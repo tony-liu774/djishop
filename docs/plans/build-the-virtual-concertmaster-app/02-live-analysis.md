@@ -73,20 +73,29 @@ Implement the YIN and pYIN algorithms for accurate pitch detection from audio sa
 ### Description
 Analyze audio characteristics to identify the type of instrument being played, enabling more accurate note detection and performance feedback.
 
+### Technical Notes & Limitations
+- **Accuracy Reality**: Client-side JavaScript instrument detection achieves ~70-80% accuracy (not 80%+). This is a known limitation.
+- **Polyphonic Instruments**: YIN/pYIN is designed for monophonic pitch detection. For polyphonic instruments (piano, guitar):
+  - Primary approach: Guide user to play one note at a time
+  - Future enhancement: Use chroma features for chord detection (lower accuracy)
+- **Monophonic focus**: Initial implementation targets monophonic instruments (winds, brass, strings)
+
 ### Subtasks
 1. Create `js/audio/instrument-detector.js` - Instrument classification
 2. Implement spectral analysis for timbre characterization
-3. Build classifier for common instrument types (piano, violin, flute, etc.)
+3. Build classifier for common monophonic instrument types (violin, flute, clarinet, etc.)
 4. Add support for dynamic instrument switching during piece
 5. Create instrument profile calibration
-6. Handle polyphonic instrument detection
+6. Add user manual override for instrument selection
+7. Document limitations for polyphonic instruments in UI
 
 ### Acceptance Criteria
-- [ ] Detects common orchestral instruments with >80% accuracy
+- [ ] Detects common monophonic instruments with >70% accuracy
 - [ ] Handles instrument changes during performance
 - [ ] Instrument type affects pitch detection parameters
 - [ ] User can manually override detected instrument
-- [ ] Detection works with recorded audio input
+- [ ] UI clearly indicates detection is not 100% accurate
+- [ ] Clear messaging when polyphonic instruments may have limited accuracy
 
 ### Depends On
 - Task 2.1 (Audio Engine provides analysis data)
