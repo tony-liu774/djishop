@@ -56,9 +56,10 @@ Integrate with the backend sheet music API endpoint to allow users to search for
 Build an image upload pipeline for scanning sheet music, including preprocessing and communication with backend Audiveris OMR service.
 
 ### Technical Notes
-- OMR is performed server-side via Audiveris (see Milestone 0.2)
+- OMR is performed server-side via Audiveris (see Task 0.2)
 - Frontend uploads images to backend `/api/omr/process` endpoint
 - Processing takes 10-60 seconds depending on complexity
+- **Deployment Note**: Task 0.2 (Audiveris OMR Service) requires Java runtime to be installed on the server
 
 ### Subtasks
 1. Create `js/services/omr-uploader.js` - Image upload to backend
@@ -162,7 +163,7 @@ Create the user interface for managing the user's sheet music collection includi
 - [ ] Import from local file system works
 
 ### Depends On
-- Task 1.1 (Sheet Music Search Integration adds scores)
+- Task 1.1 (Sheet Music Search Integration)
 - Task 1.2 (OMR adds scores)
 - Task 1.3 (Data model for display)
 
