@@ -51,12 +51,20 @@ Integrate with the backend IMSLP proxy endpoint to allow users to search for and
 ## Task 1.2: OMR Sheet Music Scanner
 
 ### Description
-Build an image upload pipeline for scanning sheet music, including preprocessing and communication with backend Audiveris OMR service.
+Build an image upload pipeline for scanning sheet music, including preprocessing and communication with backend Audiveris OMR service. Includes robust error handling for failed scans.
 
 ### Technical Notes
 - OMR is performed server-side via Audiveris (see Milestone 0.2)
 - Frontend uploads images to backend `/api/omr/process` endpoint
 - Processing takes 10-60 seconds depending on complexity
+
+### OMR Failure Handling Strategy
+When Audiveris fails or produces poor results:
+1. **Timeout/Failure**: Display friendly error message with retry option
+2. **Poor Quality**: Detect low note count or malformed output, prompt user to:
+   - Try with better image quality
+   - Use manual entry fallback
+3. **Manual Entry Fallback**: Simple form to enter basic melody note-by-note
 
 ### Subtasks
 1. Create `js/services/omr-uploader.js` - Image upload to backend
@@ -64,14 +72,17 @@ Build an image upload pipeline for scanning sheet music, including preprocessing
 3. Implement client-side image preprocessing (deskew, contrast enhancement)
 4. Create progress indicator for long-running OMR jobs
 5. Handle MusicXML output from backend Audiveris service
-6. Add fallback manual entry for simple scores
+6. Add error handling UI for failed scans with retry option
+7. Implement manual entry fallback for simple melodies
 
 ### Acceptance Criteria
 - [ ] User can upload images via file picker or camera
 - [ ] Images are preprocessed before upload (deskew, enhance)
 - [ ] Backend Audiveris processes images and returns MusicXML
 - [ ] Progress indicator shows during OMR processing
-- [ ] Scored sheet music appears in user library
+- [ ] Failed scans show friendly error with retry option
+- [ ] Quality check: detect unusable output, prompt for retry or manual entry
+- [ ] Manual entry fallback available for simple scores
 - [ ] Mobile camera capture works on iOS and Android
 
 ### Depends On

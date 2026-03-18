@@ -78,7 +78,12 @@ Analyze audio characteristics to identify the type of instrument being played, e
 - **Polyphonic Instruments**: YIN/pYIN is designed for monophonic pitch detection. For polyphonic instruments (piano, guitar):
   - Primary approach: Guide user to play one note at a time
   - Future enhancement: Use chroma features for chord detection (lower accuracy)
-- **Monophonic focus**: Initial implementation targets monophonic instruments (winds, brass, strings)
+- **Supported Instruments (Initial Scope)**: Monophonic instruments only
+  - **Woodwinds**: Flute, Oboe, Clarinet, Bassoon, Saxophone
+  - **Brass**: Trumpet, Horn, Trombone, Tuba
+  - **Strings**: Violin, Viola, Cello (single note)
+  - **Excluded**: Piano, Guitar, Harp (polyphonic - limited accuracy)
+- **Monophonic focus**: Initial implementation targets monophonic instruments
 
 ### Subtasks
 1. Create `js/audio/instrument-detector.js` - Instrument classification

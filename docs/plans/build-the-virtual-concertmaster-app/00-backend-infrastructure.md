@@ -53,6 +53,7 @@ Set up Java runtime and Audiveris OMR engine as a backend service. Create endpoi
 5. Run Audiveris as subprocess and capture output
 6. Return MusicXML to client
 7. Add timeout handling (OMR can take 30-60 seconds)
+8. Add error handling for failed/low-quality scans
 
 ### Acceptance Criteria
 - [ ] POST /api/omr/process accepts image uploads (PNG, JPEG, TIFF)
@@ -60,11 +61,14 @@ Set up Java runtime and Audiveris OMR engine as a backend service. Create endpoi
 - [ ] Timeout after 90 seconds if processing hangs
 - [ ] Temporary files cleaned up after processing
 - [ ] Error messages returned for unsupported formats
+- [ ] Failed/unusable scans return descriptive error with retry option
+- [ ] Quality assessment: detect when OMR output is unusable
 
 ### Technical Notes
 - Audiveris requires Java 11+
 - Processing time varies from 10-60 seconds depending on image complexity
 - Output is MusicXML format which the frontend can parse
+- **Docker Integration**: Use OpenJDK 11+ base image, mount Audiveris JAR from host volume or download at container startup
 
 ### Depends On
 - Task 0.1 (Express Server)
@@ -87,6 +91,7 @@ Create a backend service using Puppeteer to scrape IMSLP search results, bypassi
 5. Implement Redis-less in-memory cache (LRU, 1-hour TTL)
 6. Add rate limiting (1 request per 5 seconds)
 7. Handle pagination for large result sets
+8. Implement fallback to alternative sources if IMSLP unavailable
 
 ### Acceptance Criteria
 - [ ] GET /api/imslp/search?query=bach returns search results
@@ -95,10 +100,19 @@ Create a backend service using Puppeteer to scrape IMSLP search results, bypassi
 - [ ] Cached results returned within 100ms
 - [ ] Graceful fallback if IMSLP is unavailable
 
+### Legal Risk Acknowledgment
+⚠️ **Important**: Web scraping IMSLP may violate their Terms of Service. This implementation:
+- Uses aggressive caching to minimize requests to IMSLP servers
+- Implements strict rate limiting (1 req/5 sec)
+- Includes fallback to alternative sources:
+  - **MuseScore.com API** (has public API for sheet music)
+  - **SheetMusicPlus** (catalog access)
+  - **Manual upload** (users can upload their own scores)
+- Should be reviewed by legal counsel before production use
+
 ### Technical Notes
 - IMSLP has no public API - we use Puppeteer to scrape search results
 - Respectful scraping: cache aggressively, rate limit requests
-- Alternative sources: MuseScore API, SheetMusicPlus (future enhancement)
 
 ### Depends On
 - Task 0.1 (Express Server)
@@ -173,10 +187,39 @@ Write integration tests for backend services and prepare deployment configuratio
 4. Add health monitoring endpoints
 5. Configure error logging and alerting
 
+### Docker Configuration Requirements
+The Docker setup must handle both Node.js and Java:
+- **Base Image**: Use `eclipse-temurin:11-jdk` (or 17+) for Java 11+ runtime
+- **Multi-stage build**: Build Node.js app, copy to final image with JRE
+- **Volume mounts**:
+  - Host directory with Audiveris JAR mounted to container
+  - Input/output directories for OMR processing
+- **Example structure**:
+  ```dockerfile
+  FROM eclipse-temurin:17-jdk as base
+  # Install Node.js
+  RUN apt-get update && apt-get install -y curl
+  RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+  RUN apt-get install -y nodejs
+
+  # Copy application
+  COPY . /app
+  WORKDIR /app
+
+  # Volume for Audiveris
+  VOLUME /audiveris
+
+  # Expose ports
+  EXPOSE 3000
+
+  CMD ["node", "server.js"]
+  ```
+
 ### Acceptance Criteria
 - [ ] All endpoints have passing integration tests
-- [ ] Docker image builds successfully
+- [ ] Docker image builds successfully with Java runtime
 - [ ] Container runs locally without errors
+- [ ] Audiveris JAR accessible from container volume mount
 - [ ] Health endpoint returns service status
 
 ### Depends On
