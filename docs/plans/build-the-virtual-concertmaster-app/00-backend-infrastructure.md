@@ -1,12 +1,12 @@
 # Milestone 0: Backend Infrastructure
 
 ## Goal
-Set up the Node.js backend server required for external integrations that cannot be performed client-side: Audiveris OMR processing and IMSLP web scraping.
+Set up the Node.js backend server required for external integrations that cannot be performed client-side: Audiveris OMR processing and legal sheet music API integration.
 
 ## Scope
 - Express.js REST API server setup
 - Audiveris OMR service integration (Java process management)
-- IMSLP proxy service using Puppeteer for web scraping
+- Legal sheet music API integration (MuseScore/SheetMusicPlus/curated collection)
 - File storage system for sheet music
 - CORS and security configuration
 
@@ -74,31 +74,34 @@ Set up Java runtime and Audiveris OMR engine as a backend service. Create endpoi
 
 ---
 
-## Task 0.3: IMSLP Proxy Service
+## Task 0.3: Sheet Music API Integration
 
 ### Description
-Create a backend service using Puppeteer to scrape IMSLP search results, bypassing the lack of a public API. Implements caching to reduce load on IMSLP servers.
+Create a backend service integrating with legal sheet music sources: MuseScore API, SheetMusicPlus API, and/or a manually curated public domain collection. This replaces any web scraping approach to ensure legal compliance.
 
 ### Subtasks
-1. Install Puppeteer and related dependencies
-2. Create `/api/imslp/search` endpoint
-3. Implement search query scraping from IMSLP website
-4. Add result parsing (title, composer, PDF links)
-5. Implement Redis-less in-memory cache (LRU, 1-hour TTL)
-6. Add rate limiting (1 request per 5 seconds)
-7. Handle pagination for large result sets
+1. Evaluate and integrate with MuseScore API (or similar legal service)
+2. Create `/api/sheetmusic/search` endpoint
+3. Implement search query to legal API
+4. Add result parsing (title, composer, difficulty, PDF/MusicXML links)
+5. Implement caching for API responses (1-hour TTL)
+6. Add rate limiting to comply with API terms of service
+7. Create fallback to curated local public domain collection
+8. Handle pagination for large result sets
 
 ### Acceptance Criteria
-- [ ] GET /api/imslp/search?query=bach returns search results
-- [ ] Results include title, composer, and download URL
-- [ ] Rate limited to prevent IMSLP blocking
+- [ ] GET /api/sheetmusic/search?query=bach returns search results from legal sources
+- [ ] Results include title, composer, difficulty, and download URL
+- [ ] Rate limited per API terms of service
 - [ ] Cached results returned within 100ms
-- [ ] Graceful fallback if IMSLP is unavailable
+- [ ] Graceful fallback if primary API is unavailable
+- [ ] All data sourced from legal, licensed providers
 
 ### Technical Notes
-- IMSLP has no public API - we use Puppeteer to scrape search results
-- Respectful scraping: cache aggressively, rate limit requests
-- Alternative sources: MuseScore API, SheetMusicPlus (future enhancement)
+- **LEGAL COMPLIANCE**: This task explicitly avoids web scraping of IMSLP or any site with TOS prohibiting automated access
+- Primary: MuseScore API or SheetMusicPlus API
+- Fallback: Manually curated public domain collection (CC0/PD works)
+- Cache aggressively to minimize API calls
 
 ### Depends On
 - Task 0.1 (Express Server)

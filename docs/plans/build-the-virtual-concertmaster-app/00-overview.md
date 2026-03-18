@@ -7,6 +7,9 @@
 **Core Functionality:** A comprehensive platform for musicians to search, scan, and practice sheet music with real-time audio analysis, performance feedback, and visual metrics.
 **Target Users:** Musicians of all levels seeking to improve their performance accuracy, sight-reading skills, and practice efficiency.
 
+### Important: Greenfield Build
+This is a **greenfield build** - the existing codebase (CubeMaster, a Rubik's cube app) is not relevant to this project. The Virtual Concertmaster will be built from scratch with no dependency on existing CubeMaster code.
+
 ---
 
 ## 2. High-Level Approach
@@ -14,14 +17,14 @@
 This application will be built as a full-stack application with a **Node.js/Express backend** and **vanilla JavaScript frontend** using the Web Audio API for real-time audio processing. The architecture prioritizes:
 
 - **Backend-hosted OMR processing** via Audiveris (Java-based OMR engine)
-- **Backend IMSLP proxy** using web scraping with proper rate limiting and caching
+- **Backend sheet music API** using legal sources: MuseScore API, SheetMusicPlus API, and/or manually curated public domain collection
 - **Client-side processing** for low-latency audio feedback during live performance
 - **Modular component design** for maintainability and feature expansion
 - **Offline-first PWA capabilities** for practice anywhere (cached content)
 
 ### Technology Stack
 - **Frontend:** Vanilla JavaScript (ES6+), HTML5, CSS3
-- **Backend:** Node.js with Express, Puppeteer for scraping
+- **Backend:** Node.js with Express
 - **Audio Processing:** Web Audio API, YIN/pYIN algorithms for pitch detection
 - **OMR Processing:** Audiveris (server-side) via Java runtime
 - **Data Storage:** IndexedDB for local sheet music, localStorage for settings
@@ -40,8 +43,8 @@ This application will be built as a full-stack application with a **Node.js/Expr
 ┌───────────────────────────┴─────────────────────────────────────┐
 │                      Backend (Node.js)                          │
 │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐   │
-│  │IMSLP Proxy   │  │OMR Service   │  │File Storage       │   │
-│  │(Puppeteer)   │  │(Audiveris)    │  │(Local/Cloud)      │   │
+│  │Sheet Music   │  │OMR Service   │  │File Storage       │   │
+│  │API           │  │(Audiveris)    │  │(Local/Cloud)      │   │
 │  └──────────────┘  └──────────────┘  └────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -52,8 +55,8 @@ This application will be built as a full-stack application with a **Node.js/Expr
 
 | Milestone | Title | Description |
 |-----------|-------|-------------|
-| 0 | Backend Infrastructure | Node.js server, Audiveris OMR service, IMSLP proxy |
-| 1 | Song Ingestion | IMSLP search (via backend proxy) and OMR sheet music scanning |
+| 0 | Backend Infrastructure | Node.js server, Audiveris OMR service, Sheet Music API |
+| 1 | Song Ingestion | Sheet music search (legal APIs) and OMR sheet music scanning |
 | 2 | Live Performance Analysis | Real-time audio tracking, instrument detection, sheet music comparison |
 | 3 | Feedback & Metrics | Note accuracy scoring, rhythmic precision analysis, visual heat maps |
 | 4 | Midnight Conservatory Aesthetic | Dark elegant theme with classical music visual elements |
@@ -63,7 +66,7 @@ This application will be built as a full-stack application with a **Node.js/Expr
 ## 4. Cross-Milestone Dependencies
 
 ### Critical Sequencing
-1. **Milestone 0 (Backend Infrastructure)** must complete first - all external services (OMR, IMSLP) require backend endpoints
+1. **Milestone 0 (Backend Infrastructure)** must complete first - all external services (OMR, Sheet Music API) require backend endpoints
 2. **Milestone 1 (Song Ingestion)** depends on Milestone 0 backend being available
 3. **Milestone 2 (Live Analysis)** must complete after Milestone 1, as the analysis engine requires parsed sheet music data
 4. **Milestone 3 (Feedback & Metrics)** depends on Milestone 2's scoring engine
@@ -80,11 +83,11 @@ This application will be built as a full-stack application with a **Node.js/Expr
 
 ## 5. Total Task Count
 
-**Estimated Total: 24 tasks across 5 milestones**
+**Estimated Total: 26 tasks across 5 milestones**
 
 - Milestone 0 (Backend Infrastructure): 6 tasks
 - Milestone 1 (Song Ingestion): 5 tasks
-- Milestone 2 (Live Analysis): 5 tasks
+- Milestone 2 (Live Analysis): 7 tasks
 - Milestone 3 (Feedback & Metrics): 4 tasks
 - Milestone 4 (Midnight Aesthetic): 4 tasks
 
@@ -96,7 +99,7 @@ This application will be built as a full-stack application with a **Node.js/Expr
 
 #### Backend (Node.js)
 1. **Express Server** - REST API server handling all external integrations
-2. **IMSLPProxy** - Puppeteer-based scraping service for IMSLP (with caching)
+2. **SheetMusicAPI** - Integration with MuseScore API, SheetMusicPlus API, or curated public domain collection
 3. **AudiverisService** - Java process manager for running OMR processing
 4. **FileStorage** - Local file storage with cloud backup capability
 
@@ -105,7 +108,7 @@ This application will be built as a full-stack application with a **Node.js/Expr
 2. **SheetMusicParser** - Handles MusicXML/MEI parsing and note extraction
 3. **PerformanceComparator** - Matches live audio to expected notes with timing analysis
 4. **MetricsCalculator** - Computes accuracy scores and identifies problem areas
-5. **IMSLPClient** - Frontend client for backend IMSLP proxy endpoint
+5. **SheetMusicClient** - Frontend client for backend sheet music API (legal sources)
 6. **OMRUploader** - Frontend service for uploading images to backend Audiveris service
 
 ### Known Limitations & Trade-offs
@@ -118,7 +121,7 @@ This application will be built as a full-stack application with a **Node.js/Expr
 ### Data Flow
 ```
 Backend (Node.js)
-  ├── IMSLP Search → Puppeteer scrape → Cache → Return results to frontend
+  ├── Sheet Music Search → Legal API → Return results to frontend
   └── Image Upload → Audiveris OMR → MusicXML → Return to frontend
 
 Frontend

@@ -29,8 +29,8 @@ Build the core audio processing infrastructure using the Web Audio API for low-l
 - [ ] Audio context initializes on user gesture
 - [ ] Microphone input is captured with <20ms latency
 - [ ] Audio level meter shows real-time input levels
-5. [ ] Device selection works for multiple microphones
-- [ ] Graceful handling of permission denial
+- [ ] Device selection works for multiple microphones
+- [ ] Graceful handling of permission denial with specific error message and retry option
 
 ### Depends On
 - None
@@ -40,25 +40,36 @@ Build the core audio processing infrastructure using the Web Audio API for low-l
 
 ---
 
-## Task 2.2: Pitch Detection (YIN/pYIN)
+## Task 2.2: Pitch Detection (YIN/pYIN via Library)
 
 ### Description
-Implement the YIN and pYIN algorithms for accurate pitch detection from audio samples, essential for matching performed notes to sheet music.
+Implement accurate pitch detection using established libraries (ml5.js, crepe, or WebAssembly ports) rather than implementing YIN from scratch. This is complex DSP work that is best handled by battle-tested libraries.
+
+### Technical Notes
+- **LIBRARY REQUIRED**: Do NOT implement YIN from scratch - use established libraries
+- Recommended options (in priority order):
+  1. ml5.js pitch detection (uses CREPE model)
+  2. @crepe-kit/crepe (WebAssembly port of CREPE)
+  3.tonal or pitch-detection npm packages
+- Library handles frequency-to-MIDI note conversion
+- These libraries achieve ~1 cent accuracy with confidence scoring
 
 ### Subtasks
-1. Create `js/audio/pitch-detector.js` - Core YIN algorithm implementation
-2. Add pYIN variant for improved accuracy
-3. Implement frequency-to-MIDI note conversion
-4. Create buffer management for continuous detection
+1. Evaluate pitch detection libraries (ml5.js, crepe, wasm alternatives)
+2. Create `js/audio/pitch-detector.js` - Library wrapper implementation
+3. Integrate library with audio buffer from Audio Engine
+4. Implement frequency-to-MIDI note conversion
 5. Add confidence scoring for detected pitches
-6. Optimize for real-time performance (target <10ms per analysis)
+6. Create buffer management for continuous detection
+7. Optimize for real-time performance (target <10ms per analysis)
 
 ### Acceptance Criteria
-- [ ] YIN algorithm detects pitches within 1 cent accuracy
+- [ ] Library-based pitch detection detects pitches within 2 cents accuracy
 - [ ] Detected pitches convert correctly to musical note names
 - [ ] Confidence scores differentiate certain vs uncertain detections
 - [ ] Algorithm handles octave errors correctly
 - [ ] Processing latency stays under 10ms for real-time use
+- [ ] Permission denial shows specific error message and allows retry
 
 ### Depends On
 - Task 2.1 (Audio Engine provides sample buffer)
@@ -75,6 +86,7 @@ Analyze audio characteristics to identify the type of instrument being played, e
 
 ### Technical Notes & Limitations
 - **Accuracy Reality**: Client-side JavaScript instrument detection achieves ~70-80% accuracy (not 80%+). This is a known limitation.
+- **Quantified Accuracy**: Set realistic expectations - ~70% accuracy for common instrument classification
 - **Polyphonic Instruments**: YIN/pYIN is designed for monophonic pitch detection. For polyphonic instruments (piano, guitar):
   - Primary approach: Guide user to play one note at a time
   - Future enhancement: Use chroma features for chord detection (lower accuracy)
@@ -157,6 +169,65 @@ Implement the "Follow-the-ball" cursor system for sight-reading practice, provid
 ### Depends On
 - Task 2.4 (Sheet Music Comparison Engine)
 - Task 1.4 (MusicXML/MEI Parser provides note positions)
+
+### Agent Type
+- Coder
+
+---
+
+## Task 2.6: Built-in Metronome
+
+### Description
+Implement a built-in metronome for timing and practice, allowing users to set tempo and time signature for practice sessions.
+
+### Subtasks
+1. Create `js/audio/metronome.js` - Metronome engine using Web Audio API
+2. Implement tempo control (40-240 BPM range)
+3. Add time signature support (2/4, 3/4, 4/4, 6/8, etc.)
+4. Build accent patterns for downbeat
+5. Add visual beat indicator (flashing circle)
+6. Implement tempo tap detection
+7. Create audio feedback (click sounds with customizable tone)
+
+### Acceptance Criteria
+- [ ] Metronome plays at configurable tempo (40-240 BPM)
+- [ ] Time signatures correctly accent downbeats
+- [ ] Visual indicator flashes in sync with audio
+- [ ] Tap tempo detects BPM from user taps
+- [ ] Latency under 5ms between click and sound
+- [ ] Metronome syncs with follow-the-ball cursor
+
+### Depends On
+- Task 2.1 (Audio Engine Core)
+
+### Agent Type
+- Coder
+
+---
+
+## Task 2.7: Instrument-Specific Tuning
+
+### Description
+Implement instrument-specific pitch mapping for bowed string instruments, accounting for different tunings (Violin=GDAE, Viola=CGDA, Cello=CGDA, Bass=EADG).
+
+### Subtasks
+1. Create `js/config/instrument-profiles.js` - Instrument tuning configurations
+2. Define standard tunings for Violin, Viola, Cello, Double Bass
+3. Implement pitch mapping for each instrument's range
+4. Add transposition detection for orchestral parts
+5. Create instrument selection UI with visual instrument icons
+6. Store user instrument preference in localStorage
+
+### Acceptance Criteria
+- [ ] Violin profile maps G3-E7 (standard GDAE tuning)
+- [ ] Viola profile maps C3-A6 (standard CGDA tuning)
+- [ ] Cello profile maps C2-A6 (standard CGDA tuning)
+- [ ] Double Bass profile maps E1-G4 (standard EADG tuning, solo tuning optional)
+- [ ] Instrument selection persists across sessions
+- [ ] Pitch detection accounts for instrument range
+
+### Depends On
+- Task 2.2 (Pitch Detection)
 
 ### Agent Type
 - Coder

@@ -1,7 +1,7 @@
 # Milestone 1: Song Ingestion
 
 ## Goal
-Enable users to discover and import sheet music through two primary channels: IMSLP search (via backend proxy) for accessing the International Music Score Library Project catalog, and OMR (Optical Music Recognition) for scanning physical sheet music or images.
+Enable users to discover and import sheet music through two primary channels: sheet music search (via legal APIs like MuseScore) for accessing licensed public domain and authorized sheet music, and OMR (Optical Music Recognition) for scanning physical sheet music or images.
 
 ## Scope
 - Backend proxy integration for IMSLP search
@@ -15,33 +15,35 @@ Enable users to discover and import sheet music through two primary channels: IM
 
 ---
 
-## Task 1.1: IMSLP Search Integration
+## Task 1.1: Sheet Music Search Integration
 
 ### Description
-Integrate with the backend IMSLP proxy endpoint to allow users to search for and download public domain sheet music. Build search UI with filters for composer, instrument, and difficulty.
+Integrate with the backend sheet music API endpoint to allow users to search for and download sheet music from legal sources. Build search UI with filters for composer, instrument, and difficulty.
 
 ### Technical Notes
-- IMSLP has no public API - we use backend Puppeteer scraping (see Milestone 0.3)
-- Frontend makes requests to our backend `/api/imslp/search` endpoint
+- Uses legal sheet music APIs (MuseScore, SheetMusicPlus, or curated collection) - see Milestone 0.3
+- Frontend makes requests to our backend `/api/sheetmusic/search` endpoint
 - Results are cached on backend for performance
+- All sourced data is from licensed, legal providers
 
 ### Subtasks
-1. Create `js/services/imslp-client.js` - HTTP client for backend IMSLP proxy
-2. Build search form UI with filters (composer, instrument, opus number)
+1. Create `js/services/sheetmusic-client.js` - HTTP client for backend sheet music API
+2. Build search form UI with filters (composer, instrument, opus number, difficulty)
 3. Implement search results display with pagination
 4. Add score preview functionality
 5. Implement download handler for MusicXML/MEI files
 6. Create library storage service using IndexedDB
 
 ### Acceptance Criteria
-- [ ] User can search by composer name via backend proxy
-- [ ] Search results display with title, composer, and download options
+- [ ] User can search by composer name via backend API
+- [ ] Search results display with title, composer, difficulty, and download options
 - [ ] MusicXML/MEI files can be downloaded and stored locally
 - [ ] Library view shows all imported scores
-- [ ] Search returns results within 5 seconds (includes backend scraping)
+- [ ] Search returns results within 5 seconds
+- [ ] All data sourced from legal, licensed providers
 
 ### Depends On
-- Milestone 0.3 (IMSLP Proxy Service)
+- Task 0.3 (Sheet Music API Integration)
 
 ### Agent Type
 - Coder
@@ -103,7 +105,7 @@ Define comprehensive data structures for representing parsed sheet music includi
 - [ ] Model validates imported data integrity
 
 ### Depends On
-- Task 0.3 (IMSLP Proxy Service - provides search API)
+- Task 0.3 (Sheet Music API Integration - provides search API)
 - Task 0.2 (Audiveris OMR Service - provides OMR API)
 
 ### Agent Type
@@ -166,7 +168,7 @@ Create the user interface for managing the user's sheet music collection includi
 
 ### Notes
 - All external integrations use backend endpoints from Milestone 0
-- Frontend never directly calls IMSLP or runs Audiveris
+- Frontend never directly calls external sheet music APIs or runs Audiveris
 
 ### Agent Type
 - Coder

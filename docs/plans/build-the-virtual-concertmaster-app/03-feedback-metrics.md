@@ -26,10 +26,10 @@ Calculate and display real-time accuracy scores comparing performed notes agains
 6. Add scoring for dynamics and articulation matching
 
 ### Acceptance Criteria
-- [ ] Real-time accuracy percentage updates during performance
-- [ ] Pitch accuracy shows cents deviation from target
-- [ ] Timing accuracy shows milliseconds early/late
-- [ ] Overall score combines pitch and timing components
+- [ ] Real-time accuracy percentage updates at 60fps during performance
+- [ ] Pitch accuracy shows cents deviation from target (0-50 cents = correct, 50-100 = slight error, >100 = wrong note)
+- [ ] Timing accuracy shows milliseconds early/late (within 50ms = correct, 50-100ms = slight, >100ms = wrong timing)
+- [ ] Overall score combines pitch (60% weight) and timing (40% weight) components
 - [ ] Score breakdown shows problem areas per measure
 
 ### Depends On
