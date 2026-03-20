@@ -26,6 +26,7 @@ class ConcertmasterApp {
         // UI Components
         this.sheetMusicRenderer = null;
         this.heatMapRenderer = null;
+        this.followTheBall = null;
 
         // DOM Elements
         this.views = {};
@@ -92,6 +93,11 @@ class ConcertmasterApp {
         if (sheetContainer) {
             this.sheetMusicRenderer = new SheetMusicRenderer(sheetContainer);
             this.sheetMusicRenderer.init();
+
+            // Initialize follow-the-ball cursor
+            this.followTheBall = new FollowTheBall(sheetContainer);
+            this.followTheBall.init();
+            this.followTheBall.connectToRenderer(this.sheetMusicRenderer);
         }
 
         // Initialize heat map renderer
@@ -472,6 +478,12 @@ class ConcertmasterApp {
 
         this.currentScore = score;
 
+        // Remove session-ended state from sheet music container
+        const sheetContainer = document.getElementById('sheet-music-container');
+        if (sheetContainer) {
+            sheetContainer.classList.remove('session-ended');
+        }
+
         // Set up performance comparator with the score
         this.performanceComparator.setScore(score);
 
@@ -581,6 +593,17 @@ class ConcertmasterApp {
         // Calculate final scores
         const finalScore = this.accuracyScorer.calculateOverall(this.sessionData);
 
+        // Add session-ended state to sheet music container
+        const sheetContainer = document.getElementById('sheet-music-container');
+        if (sheetContainer) {
+            sheetContainer.classList.add('session-ended');
+        }
+
+        // Reset cursor when practice ends
+        if (this.followTheBall) {
+            this.followTheBall.reset();
+        }
+
         // Update UI
         const startBtn = document.getElementById('start-practice-btn');
         startBtn.innerHTML = `
@@ -653,6 +676,16 @@ class ConcertmasterApp {
                     this.sheetMusicRenderer.setCursorPosition(
                         this.performanceComparator.getProgress()
                     );
+                }
+
+                // Update follow-the-ball cursor
+                if (this.followTheBall && this.followTheBall.enabled) {
+                    this.followTheBall.setTargetPosition(
+                        this.performanceComparator.getProgress()
+                    );
+
+                    // Trigger bounce on note detection
+                    this.followTheBall.onNoteDetected();
                 }
             }
 
