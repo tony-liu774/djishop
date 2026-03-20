@@ -79,10 +79,11 @@ class PitchDetector {
     computeDifferenceFunction(buffer, minTau, maxTau) {
         const tauRange = maxTau - minTau;
         const diff = new Float32Array(tauRange);
+        const bufferSize = Math.min(this.bufferSize, buffer.length - maxTau);
 
         for (let tau = minTau; tau < maxTau; tau++) {
             let sum = 0;
-            for (let j = 0; j < this.bufferSize; j++) {
+            for (let j = 0; j < bufferSize; j++) {
                 const delta = buffer[j] - buffer[j + tau];
                 sum += delta * delta;
             }

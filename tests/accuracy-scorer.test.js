@@ -89,12 +89,12 @@ describe('AccuracyScorer', () => {
 
         test('should clamp scores between 0 and 100', () => {
             const sessionData = {
-                pitchAccuracy: [150, -50], // Out of range
-                timingAccuracy: [200]
+                pitchAccuracy: [150, -50], // Out of range, clamped to [100, 0], average = 50
+                timingAccuracy: [200] // Clamped to [100], average = 100
             };
             const result = scorer.calculateOverall(sessionData);
-            expect(result.pitch).toBe(100); // Clamped
-            expect(result.timing).toBe(100); // Clamped
+            expect(result.pitch).toBe(50); // Average of clamped values
+            expect(result.timing).toBe(100); // Single clamped value
         });
     });
 

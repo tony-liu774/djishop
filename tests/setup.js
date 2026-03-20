@@ -2,18 +2,43 @@
 // This runs after the test environment is set up
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 // FIRST: Set up the window object BEFORE loading source files
 global.window = global;
+global.Float32Array = Float32Array;
+global.Uint8Array = Uint8Array;
 
-// Helper to load source files - execute code in global scope
+// Helper to load source files using vm with proper context
 function loadSourceFile(filename) {
     const filePath = path.join(__dirname, '..', 'src', 'js', filename);
     if (fs.existsSync(filePath)) {
         const code = fs.readFileSync(filePath, 'utf8');
-        // Execute in the global context
-        // We use indirect eval to execute in global scope
-        (0, eval)(code);
+        // Create a context with window/global
+        const context = {
+            window: global,
+            console: console,
+            setTimeout: setTimeout,
+            setInterval: setInterval,
+            clearTimeout: clearTimeout,
+            clearInterval: clearInterval,
+            Math: Math,
+            Array: Array,
+            Object: Object,
+            String: String,
+            Number: Number,
+            Float32Array: Float32Array
+        };
+        vm.createContext(context);
+        // Run the code in the context
+        vm.runInContext(code, context);
+        // Copy all exported classes to global
+        Object.keys(context).forEach(key => {
+            if (context[key] && typeof context[key] === 'function' && key !== 'setTimeout') {
+                global[key] = context[key];
+                global.window[key] = context[key];
+            }
+        });
     }
 }
 
