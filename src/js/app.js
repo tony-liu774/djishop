@@ -8,8 +8,6 @@ class ConcertmasterApp {
         // Core modules
         this.audioEngine = null;
         this.pitchDetector = null;
-        this.precisionTuner = null;
-        this.tunerGauge = null;
         this.metronome = null;
         this.scoreLibrary = null;
         this.performanceComparator = null;
@@ -18,15 +16,12 @@ class ConcertmasterApp {
 
         // State
         this.isPracticing = false;
-        this.isTunerActive = false;
         this.selectedInstrument = 'violin';
         this.confidenceThreshold = 0.85;
-        this.cursorEnabled = false;
 
         // Performance tracking
         this.sessionData = null;
         this.accuracyScorer = null;
-        this.performanceHistory = null;
 
         // UI Components
         this.sheetMusicRenderer = null;
@@ -58,14 +53,8 @@ class ConcertmasterApp {
             // Initialize audio engine
             await this.initializeAudio();
 
-            // Initialize precision tuner
-            await this.precisionTuner.init();
-
             // Load library
             await this.loadLibrary();
-
-            // Load performance history
-            await this.performanceHistory.init();
 
             console.log('Concertmaster initialized successfully');
         } catch (error) {
@@ -77,18 +66,19 @@ class ConcertmasterApp {
     initializeComponents() {
         // Create core components
         this.pitchDetector = new PitchDetector();
-        this.precisionTuner = new PrecisionTuner();
         this.metronome = new Metronome();
         this.scoreLibrary = new ScoreLibrary();
         this.performanceComparator = new PerformanceComparator();
         this.rhythmAnalyzer = new RhythmAnalyzer();
         this.accuracyScorer = new AccuracyScorer();
-        this.performanceHistory = new PerformanceHistory();
+        this.communityService = new CommunityLibraryService();
+        this.imslpService = new IMSLPService();
+        this.omrService = new OMRService();
 
         // Get DOM elements
         this.views = {
             library: document.getElementById('library-view'),
-            tuner: document.getElementById('tuner-view'),
+            community: document.getElementById('community-view'),
             practice: document.getElementById('practice-view'),
             metronome: document.getElementById('metronome-view'),
             settings: document.getElementById('settings-view')
@@ -99,77 +89,8 @@ class ConcertmasterApp {
         // Initialize renderers
         this.initRenderers();
 
-        // Initialize tuner components
-        this.initTuner();
-    }
-
-    initTuner() {
-        // Initialize tuner gauge
-        const gaugeContainer = document.getElementById('tuner-gauge');
-        if (gaugeContainer) {
-            this.tunerGauge = new TunerGauge('tuner-gauge', { size: 300 });
-            this.tunerGauge.init();
-        }
-
-        // Initialize precision tuner
-        this.precisionTuner.onNoteDetected = (data) => {
-            if (this.tunerGauge) {
-                this.tunerGauge.update(data);
-            }
-        };
-
-        this.precisionTuner.onError = (error) => {
-            this.showToast('Tuner error: ' + error.message, 'error');
-        };
-
-        // Setup tuner event listeners
-        this.setupTunerListeners();
-    }
-
-    setupTunerListeners() {
-        // Instrument selection buttons
-        document.querySelectorAll('.tuner-instrument-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tuner-instrument-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                this.selectedInstrument = btn.dataset.instrument;
-                this.precisionTuner.setInstrument(this.selectedInstrument);
-            });
-        });
-
-        // Tuner toggle button
-        const tunerToggle = document.getElementById('tuner-toggle');
-        tunerToggle?.addEventListener('click', async () => {
-            if (this.isTunerActive) {
-                this.precisionTuner.stopListening();
-                this.isTunerActive = false;
-                tunerToggle.classList.remove('active', 'listening');
-                tunerToggle.querySelector('span').textContent = 'Start Tuner';
-                if (this.tunerGauge) {
-                    this.tunerGauge.reset();
-                }
-            } else {
-                const success = await this.precisionTuner.startListening();
-                if (success) {
-                    this.isTunerActive = true;
-                    tunerToggle.classList.add('active', 'listening');
-                    tunerToggle.querySelector('span').textContent = 'Stop Tuner';
-                    this.showToast('Tuner active - play a note', 'success');
-                } else {
-                    this.showToast('Could not access microphone', 'error');
-                }
-            }
-        });
-
-        // Reference frequency input
-        const refFreqInput = document.getElementById('reference-freq');
-        refFreqInput?.addEventListener('change', (e) => {
-            const freq = parseFloat(e.target.value);
-            if (freq >= 430 && freq <= 450) {
-                this.precisionTuner.setReferenceFrequency(freq);
-                this.showToast(`Reference A4 set to ${freq} Hz`, 'info');
-            }
-        });
+        // Initialize community browser
+        this.initCommunityBrowser();
     }
 
     initRenderers() {
@@ -178,6 +99,9 @@ class ConcertmasterApp {
         if (sheetContainer) {
             this.sheetMusicRenderer = new SheetMusicRenderer(sheetContainer);
             this.sheetMusicRenderer.init();
+
+            // Initialize zoom controller for sheet music
+            this.zoomController = new ZoomController(this.sheetMusicRenderer.getCanvas());
         }
 
         // Initialize heat map renderer
@@ -185,11 +109,44 @@ class ConcertmasterApp {
         if (heatmapPreview) {
             this.heatMapRenderer = new HeatMapRenderer(heatmapPreview);
             this.heatMapRenderer.init();
+        }
+    }
 
-            // Add click handler for measure details
-            this.heatMapRenderer.onMeasureClick = (measure, score, notes) => {
-                this.showMeasureDetail(measure, score, notes);
-            };
+    initCommunityBrowser() {
+        const container = document.getElementById('community-browser-container');
+        if (container) {
+            this.communityBrowser = new CommunityBrowser(container);
+            this.communityBrowser.init();
+
+            // Listen for score view events
+            container.addEventListener('scoreview', (e) => {
+                this.handleCommunityScoreView(e.detail.scoreId);
+            });
+        }
+    }
+
+    async handleCommunityScoreView(scoreId) {
+        try {
+            // Download score from community library
+            const data = await this.communityService.downloadScore(scoreId);
+
+            if (data.musicxmlContent) {
+                // Parse and add to local library
+                const parser = new MusicXMLParser();
+                const score = parser.parse(data.musicxmlContent);
+                score.title = data.title;
+                score.composer = data.composer;
+
+                await this.scoreLibrary.addScore(score);
+                this.renderLibrary();
+                this.showToast(`Added "${data.title}" to your library`, 'success');
+
+                // Switch to practice view
+                this.selectScore(score.id);
+            }
+        } catch (error) {
+            console.error('Error adding community score:', error);
+            this.showToast('Failed to add score to library', 'error');
         }
     }
 
@@ -273,37 +230,57 @@ class ConcertmasterApp {
             document.getElementById('import-modal')?.classList.add('active');
         });
 
-        document.getElementById('scan-music-btn')?.addEventListener('click', () => {
-            // Trigger file input for scanning
-            const scanInput = document.getElementById('scan-file-input');
-            if (scanInput) {
-                scanInput.click();
-            } else {
-                this.showToast('Scan feature coming soon', 'info');
-            }
-        });
-
-        // Handle scan file input
-        document.getElementById('scan-file-input')?.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                this.processScannedImage(file);
-            }
+        document.getElementById('scan-music-btn')?.addEventListener('click', async () => {
+            // Trigger file input for OMR scanning
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    await this.processOMRScan(file);
+                }
+            };
+            input.click();
         });
 
         document.getElementById('search-imslp-btn')?.addEventListener('click', () => {
-            document.getElementById('imslp-modal')?.classList.add('active');
+            // Show community browser instead of IMSLP modal
+            this.showView('community-view');
         });
 
         // IMSLP search
         document.getElementById('imslp-search-btn')?.addEventListener('click', () => {
             this.searchIMSLP();
         });
+    }
 
-        // Measure detail modal close button
-        document.getElementById('close-detail-btn')?.addEventListener('click', () => {
-            document.getElementById('measure-detail-modal')?.classList.remove('active');
-        });
+    async processOMRScan(file) {
+        this.showToast('Processing sheet music scan...', 'info');
+
+        try {
+            const result = await this.omrService.processImage(file, this.selectedInstrument, (status) => {
+                // Update progress
+                console.log('OMR Progress:', status.progress);
+            });
+
+            if (result.musicxmlContent) {
+                const parser = new MusicXMLParser();
+                const score = parser.parse(result.musicxmlContent);
+                score.title = result.title || 'Scanned Score';
+                score.composer = result.composer || 'Unknown';
+
+                await this.scoreLibrary.addScore(score);
+                this.renderLibrary();
+                this.showToast('Scanned score added to library', 'success');
+
+                // Switch to practice view
+                this.selectScore(score.id);
+            }
+        } catch (error) {
+            console.error('OMR Error:', error);
+            this.showToast('Failed to process scan: ' + error.message, 'error');
+        }
     }
 
     setupLibraryActions() {
@@ -463,31 +440,6 @@ class ConcertmasterApp {
             this.pitchDetector.confidenceThreshold = value;
             if (sensitivityValue) sensitivityValue.textContent = value.toFixed(2);
         });
-
-        // Follow-the-ball cursor toggle
-        const cursorToggle = document.getElementById('show-cursor-toggle');
-        if (cursorToggle) {
-            // Load saved preference
-            const savedPref = localStorage.getItem('cursorEnabled');
-            this.cursorEnabled = savedPref === 'true';
-
-            // Update toggle state
-            cursorToggle.classList.toggle('active', this.cursorEnabled);
-            cursorToggle.setAttribute('aria-checked', this.cursorEnabled);
-
-            // Handle toggle click
-            cursorToggle.addEventListener('click', () => {
-                this.cursorEnabled = !this.cursorEnabled;
-                localStorage.setItem('cursorEnabled', this.cursorEnabled);
-                cursorToggle.classList.toggle('active', this.cursorEnabled);
-                cursorToggle.setAttribute('aria-checked', this.cursorEnabled);
-
-                // Update sheet music renderer
-                if (this.sheetMusicRenderer) {
-                    this.sheetMusicRenderer.setCursorVisible(this.cursorEnabled);
-                }
-            });
-        }
     }
 
     updateInstrumentSettings() {
@@ -523,13 +475,7 @@ class ConcertmasterApp {
             return;
         }
 
-        grid.innerHTML = scores.map(score => {
-            // Get improvement data if available
-            const improvement = this.performanceHistory?.calculateImprovement(score.id);
-            const recentSessions = this.performanceHistory?.getSessionsForScore(score.id) || [];
-            const lastSession = recentSessions.length > 0 ? recentSessions[recentSessions.length - 1] : null;
-
-            return `
+        grid.innerHTML = scores.map(score => `
             <div class="library-card" data-id="${score.id}">
                 <div class="library-card-thumbnail">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -543,21 +489,8 @@ class ConcertmasterApp {
                     <span class="instrument-badge">${score.instrument || 'Violin'}</span>
                     <span>${this.formatDate(score.addedAt)}</span>
                 </div>
-                ${improvement ? `
-                <div class="session-improvement">
-                    <span class="improvement-trend ${improvement.trend}">
-                        ${improvement.trend === 'improving' ? '↑' : improvement.trend === 'declining' ? '↓' : '→'}
-                        ${improvement.improvement > 0 ? '+' : ''}${improvement.improvement}%
-                    </span>
-                    <span class="improvement-sessions">${improvement.sessionCount} sessions</span>
-                </div>
-                ` : lastSession ? `
-                <div class="session-improvement">
-                    <span class="last-score">Last: ${Math.round(lastSession.overallScore)}%</span>
-                </div>
-                ` : ''}
             </div>
-        `}).join('');
+        `).join('');
 
         // Add click handlers
         grid.querySelectorAll('.library-card').forEach(card => {
@@ -632,7 +565,6 @@ class ConcertmasterApp {
         // Render sheet music
         if (this.sheetMusicRenderer) {
             this.sheetMusicRenderer.setScore(score);
-            this.sheetMusicRenderer.setCursorVisible(this.cursorEnabled);
         }
 
         // Update UI
@@ -678,36 +610,6 @@ class ConcertmasterApp {
         } catch (error) {
             console.error('File upload error:', error);
             this.showToast('Failed to process file: ' + error.message, 'error');
-        }
-    }
-
-    async processScannedImage(file) {
-        this.showToast('Processing scanned image...', 'info');
-
-        try {
-            // Initialize OMR client if needed
-            if (!this.omrClient) {
-                this.omrClient = new OMRClient();
-            }
-
-            // Process the image
-            const result = await this.omrClient.processImage(file, {
-                enhance: true,
-                deskew: true
-            });
-
-            // Show success message
-            this.showToast('Image processed successfully', 'success');
-
-            // For now, show the result (placeholder - would create actual score in production)
-            console.log('OMR Result:', result);
-
-            // Close modal
-            document.getElementById('import-modal')?.classList.remove('active');
-
-        } catch (error) {
-            console.error('OMR processing error:', error);
-            this.showToast('Failed to process image: ' + error.message, 'error');
         }
     }
 
@@ -763,28 +665,8 @@ class ConcertmasterApp {
         this.isPracticing = false;
         this.audioEngine.stopListening();
 
-        // Hide cursor
-        if (this.sheetMusicRenderer) {
-            this.sheetMusicRenderer.setCursorVisible(false);
-        }
-
         // Calculate final scores
         const finalScore = this.accuracyScorer.calculateOverall(this.sessionData);
-
-        // Save session to history
-        if (this.sessionData && this.currentScore) {
-            const sessionRecord = {
-                scoreId: this.currentScore.id,
-                scoreTitle: this.currentScore.title,
-                overallScore: finalScore.overall,
-                pitchScore: finalScore.pitch,
-                timingScore: finalScore.timing,
-                duration: Date.now() - this.sessionData.startTime,
-                notes: this.sessionData.notes,
-                completedAt: new Date().toISOString()
-            };
-            this.performanceHistory.saveSession(sessionRecord);
-        }
 
         // Update UI
         const startBtn = document.getElementById('start-practice-btn');
@@ -854,11 +736,9 @@ class ConcertmasterApp {
                 }
 
                 // Update cursor position
-                if (this.sheetMusicRenderer && this.cursorEnabled) {
-                    const isOnPitch = comparison.matched && Math.abs(result.centsDeviation || 0) <= 10;
+                if (this.sheetMusicRenderer) {
                     this.sheetMusicRenderer.setCursorPosition(
-                        this.performanceComparator.getProgress(),
-                        isOnPitch
+                        this.performanceComparator.getProgress()
                     );
                 }
             }
@@ -936,40 +816,7 @@ class ConcertmasterApp {
         modal.classList.add('active');
     }
 
-    showMeasureDetail(measure, score, notes) {
-        const modal = document.getElementById('measure-detail-modal');
-        if (!modal) return;
-
-        // Update measure info
-        document.getElementById('detail-measure-number').textContent = measure;
-        document.getElementById('detail-measure-score').textContent = Math.round(score) + '%';
-
-        // Update note breakdown
-        const breakdown = document.getElementById('note-breakdown');
-        if (!breakdown) return;
-
-        if (!notes || notes.length === 0) {
-            breakdown.innerHTML = '<p class="empty-state">No note data available</p>';
-        } else {
-            breakdown.innerHTML = notes.map(note => {
-                const accuracyClass = note.accuracy >= 90 ? 'good' : note.accuracy >= 70 ? 'okay' : 'poor';
-                return `
-                    <div class="note-item">
-                        <span class="note-name">${note.note}</span>
-                        <div>
-                            <span class="note-accuracy ${accuracyClass}">${Math.round(note.accuracy)}%</span>
-                            <span class="cents-deviation">(${note.centsDeviation > 0 ? '+' : ''}${note.centsDeviation}¢)</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Show modal
-        modal.classList.add('active');
-    }
-
-    async searchIMSLP() {
+    searchIMSLP() {
         const input = document.getElementById('imslp-search-input');
         const query = input?.value?.trim();
 
@@ -984,61 +831,27 @@ class ConcertmasterApp {
             resultsEl.innerHTML = '<div class="empty-state"><p>Searching...</p></div>';
         }
 
-        try {
-            // Initialize client if needed
-            if (!this.imslpClient) {
-                this.imslpClient = new IMSLPClient();
-            }
-
-            // Call backend API
-            const results = await this.imslpClient.search(query, this.selectedInstrument);
-
-            if (results.length === 0) {
-                if (resultsEl) {
-                    resultsEl.innerHTML = '<div class="empty-state"><p>No results found</p></div>';
-                }
-                return;
-            }
-
-            // Render results
+        // Simulate search results (in real implementation, this would call backend)
+        setTimeout(() => {
             if (resultsEl) {
-                resultsEl.innerHTML = results.map(result => `
-                    <div class="search-result-item" data-id="${result.id}">
+                resultsEl.innerHTML = `
+                    <div class="search-result-item">
                         <div class="result-info">
-                            <h4>${result.title}</h4>
-                            <p>${result.composer} • ${result.instrument} • ${result.difficulty}</p>
+                            <h4>Bach - Cello Suite No. 1</h4>
+                            <p>J.S. Bach • Cello</p>
                         </div>
-                        <button class="btn btn-secondary imslp-download-btn" data-id="${result.id}">Download</button>
+                        <button class="btn btn-secondary">Download</button>
                     </div>
-                `).join('');
-
-                // Add download handlers
-                resultsEl.querySelectorAll('.imslp-download-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = e.target.dataset.id;
-                        this.downloadFromIMSLP(id);
-                    });
-                });
+                    <div class="search-result-item">
+                        <div class="result-info">
+                            <h4>Vivaldi - Four Seasons</h4>
+                            <p>A. Vivaldi • Violin</p>
+                        </div>
+                        <button class="btn btn-secondary">Download</button>
+                    </div>
+                `;
             }
-        } catch (error) {
-            console.error('IMSLP search error:', error);
-            this.showToast('Search failed: ' + error.message, 'error');
-            if (resultsEl) {
-                resultsEl.innerHTML = '<div class="empty-state"><p>Search failed. Please try again.</p></div>';
-            }
-        }
-    }
-
-    async downloadFromIMSLP(id) {
-        this.showToast('Downloading...', 'info');
-
-        try {
-            // For now, show a message that this is a placeholder
-            this.showToast('Download feature coming soon', 'info');
-        } catch (error) {
-            console.error('Download error:', error);
-            this.showToast('Download failed: ' + error.message, 'error');
-        }
+        }, 1500);
     }
 
     showToast(message, type = 'info') {

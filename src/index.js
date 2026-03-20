@@ -1,23 +1,14 @@
 const express = require('express');
 const helmet = require('helmet');
-const multer = require('multer');
 const config = require('./config');
 const logger = require('./middleware/logger');
 const cors = require('./middleware/cors');
 const rateLimiter = require('./middleware/rateLimiter');
 const healthRoutes = require('./routes/health');
-const imslpRoutes = require('./routes/imslp');
+const communityRoutes = require('./routes/community');
 const omrRoutes = require('./routes/omr');
 
 const app = express();
-
-// Configure multer for file uploads
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB
-    }
-});
 
 // Security headers with CSP
 app.use(helmet({
@@ -56,13 +47,13 @@ app.use(express.static('.', { index: 'index.html' }));
 // Health check routes
 app.use('/health', healthRoutes);
 
-// IMSLP proxy routes
-app.use('/api/imslp', imslpRoutes);
+// Community Library routes
+app.use('/api/community', communityRoutes);
 
 // OMR (Optical Music Recognition) routes
-app.use('/api/omr', upload.single('image'), omrRoutes);
+app.use('/api/omr', omrRoutes);
 
-// API routes (placeholder for future routes)
+// API routes
 app.use('/api', (req, res) => {
   res.status(200).json({
     message: 'Music App API',
@@ -70,8 +61,12 @@ app.use('/api', (req, res) => {
     endpoints: {
       health: '/health',
       healthDetailed: '/health/detailed',
-      imslpSearch: '/api/imslp/search',
-      imslpDownload: '/api/imslp/download/:id',
+      community: '/api/community',
+      communitySearch: '/api/community?search=bach',
+      communityInstruments: '/api/community/meta/instruments',
+      omrScan: '/api/omr/scan',
+      omrStatus: '/api/omr/status/:jobId',
+      omrResult: '/api/omr/result/:jobId',
     },
   });
 });
