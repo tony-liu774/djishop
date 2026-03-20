@@ -60,14 +60,14 @@ const simulateOMRProcessing = (filePath) => {
  */
 router.post('/scan', async (req, res) => {
     try {
-        if (!req.files || !req.files.image) {
+        if (!req.file) {
             return res.status(400).json({
                 error: 'No image uploaded',
                 message: 'Please upload an image file'
             });
         }
 
-        const imageFile = req.files.image;
+        const imageFile = req.file;
 
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
