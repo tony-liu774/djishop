@@ -10,17 +10,9 @@ class SheetMusicRenderer {
         this.ctx = null;
         this.score = null;
         this.cursorPosition = null;
-        this.cursorVisible = false;
-        this.cursorGlowIntensity = 0;
-        this.cursorX = 0;
-        this.cursorY = 0;
-        this.targetCursorX = 0;
-        this.targetCursorY = 0;
-        this.animationFrameId = null;
         this.noteWidth = 30;
         this.staffY = 80;
         this.lineSpacing = 10;
-        this.isOnPitch = false;
     }
 
     init() {
@@ -33,34 +25,6 @@ class SheetMusicRenderer {
         this.resize();
 
         window.addEventListener('resize', () => this.resize());
-
-        // Start animation loop for smooth cursor movement
-        this.startAnimationLoop();
-    }
-
-    startAnimationLoop() {
-        const animate = () => {
-            if (this.cursorVisible) {
-                // Smooth interpolation towards target position
-                const smoothing = 0.15;
-                this.cursorX += (this.targetCursorX - this.cursorX) * smoothing;
-                this.cursorY += (this.targetCursorY - this.cursorY) * smoothing;
-
-                // Pulse glow effect
-                const time = Date.now() / 1000;
-                this.cursorGlowIntensity = 0.5 + 0.5 * Math.sin(time * 3);
-            }
-            this.render();
-            this.animationFrameId = requestAnimationFrame(animate);
-        };
-        animate();
-    }
-
-    stopAnimationLoop() {
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-            this.animationFrameId = null;
-        }
     }
 
     setScore(score) {
@@ -99,11 +63,6 @@ class SheetMusicRenderer {
 
         // Draw measure numbers
         this.drawMeasureNumbers();
-
-        // Draw cursor (follow-the-ball) on top
-        if (this.cursorVisible && this.cursorPosition) {
-            this.drawCursor();
-        }
     }
 
     renderPlaceholder() {
@@ -275,95 +234,14 @@ class SheetMusicRenderer {
         }
     }
 
-    drawCursor() {
-        const ctx = this.ctx;
-        const x = this.cursorX;
-        const y = this.cursorY;
-
-        // Determine cursor color based on pitch accuracy
-        const baseColor = this.isOnPitch ? '#2d5a4a' : '#8b2942'; // Emerald or Crimson
-        const glowColor = this.isOnPitch ? 'rgba(45, 90, 74, ' : 'rgba(139, 41, 66, ';
-
-        // Draw outer glow (atmospheric effect)
-        const glowRadius = 25 + this.cursorGlowIntensity * 15;
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
-        gradient.addColorStop(0, glowColor + (0.4 * this.cursorGlowIntensity) + ')');
-        gradient.addColorStop(0.5, glowColor + (0.2 * this.cursorGlowIntensity) + ')');
-        gradient.addColorStop(1, glowColor + '0)');
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Draw inner cursor ball
-        ctx.fillStyle = baseColor;
-        ctx.shadowColor = this.isOnPitch ? '#2d5a4a' : '#8b2942';
-        ctx.shadowBlur = 15 + this.cursorGlowIntensity * 10;
-        ctx.beginPath();
-        ctx.arc(x, y, 10, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Reset shadow
-        ctx.shadowBlur = 0;
-
-        // Draw highlight on ball
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.beginPath();
-        ctx.arc(x - 3, y - 3, 4, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    setCursorPosition(position, isOnPitch = false) {
+    setCursorPosition(position) {
         this.cursorPosition = position;
-        this.isOnPitch = isOnPitch;
-
-        if (position && this.score) {
-            const coords = this.getNoteCoordinates(position.measureIndex, position.noteIndex);
-            if (coords) {
-                this.targetCursorX = coords.x;
-                this.targetCursorY = coords.y;
-            }
-        }
-    }
-
-    setCursorVisible(visible) {
-        this.cursorVisible = visible;
-        if (!visible) {
-            this.cursorPosition = null;
-        }
-    }
-
-    getNoteCoordinates(measureIndex, noteIndex) {
-        if (!this.score || !this.score.parts.length) return null;
-
-        const startX = 100;
-        const measures = this.score.parts[0].measures || [];
-        if (measureIndex >= measures.length) return null;
-
-        const measureWidth = (this.canvas.width - 140) / Math.min(measures.length, 8);
-        const measureX = startX + measureIndex * measureWidth;
-
-        const measure = measures[measureIndex];
-        if (!measure || noteIndex >= measure.notes.length) return null;
-
-        const note = measure.notes[noteIndex];
-        const noteX = measureX + 20 + noteIndex * this.noteWidth;
-        const noteY = this.getNoteY(note);
-
-        return { x: noteX, y: noteY };
+        this.render();
     }
 
     clear() {
         if (this.ctx && this.canvas) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        }
-    }
-
-    destroy() {
-        this.stopAnimationLoop();
-        if (this.canvas && this.canvas.parentNode) {
-            this.canvas.parentNode.removeChild(this.canvas);
         }
     }
 

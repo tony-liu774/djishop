@@ -27,7 +27,7 @@
                 </a>
                 <div class="nav-links desktop-only">
                     <a href="#library" class="nav-link active">Library</a>
-                    <a href="#tuner" class="nav-link">Tuner</a>
+                    <a href="#community" class="nav-link">Community</a>
                     <a href="#practice" class="nav-link">Practice</a>
                     <a href="#metronome" class="nav-link">Metronome</a>
                     <a href="#settings" class="nav-link">Settings</a>
@@ -48,14 +48,6 @@
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                 </svg>
                 <span>Library</span>
-            </a>
-            <a href="#tuner" class="mobile-nav-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <circle cx="12" cy="12" r="6"/>
-                    <circle cx="12" cy="12" r="2"/>
-                </svg>
-                <span>Tuner</span>
             </a>
             <a href="#practice" class="mobile-nav-link">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -134,44 +126,9 @@
                 </div>
             </section>
 
-            <!-- Tuner View -->
-            <section id="tuner-view" class="view">
-                <div class="tuner-header">
-                    <h1>Precision Tuner</h1>
-                    <p class="subtitle">Tune your instrument with precision</p>
-                </div>
-
-                <div class="tuner-instrument-select">
-                    <button class="tuner-instrument-btn active" data-instrument="violin">Violin</button>
-                    <button class="tuner-instrument-btn" data-instrument="viola">Viola</button>
-                    <button class="tuner-instrument-btn" data-instrument="cello">Cello</button>
-                    <button class="tuner-instrument-btn" data-instrument="bass">Bass</button>
-                </div>
-
-                <div class="tuner-gauge-container">
-                    <div id="tuner-gauge" class="tuner-gauge"></div>
-                </div>
-
-                <div class="tuner-strings" id="tuner-strings">
-                    <!-- String frequencies will be populated here -->
-                </div>
-
-                <div class="tuner-controls">
-                    <button class="tuner-toggle" id="tuner-toggle">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                            <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                        <span>Start Tuner</span>
-                    </button>
-                </div>
-
-                <div class="tuner-reference">
-                    <label for="reference-freq">Reference A4:</label>
-                    <input type="number" id="reference-freq" value="440" min="430" max="450" step="0.1">
-                    <span>Hz</span>
-                </div>
+            <!-- Community View -->
+            <section id="community-view" class="view">
+                <div id="community-browser-container"></div>
             </section>
 
             <!-- Practice View -->
@@ -372,7 +329,7 @@
                         </div>
                     </label>
                     <label class="import-option">
-                        <input type="file" id="scan-file-input" accept="image/*" capture="environment" hidden>
+                        <input type="file" accept="image/*" capture="environment" hidden>
                         <div class="import-option-content">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -456,32 +413,6 @@
         </div>
     </div>
 
-    <!-- Measure Detail Modal -->
-    <div class="modal" id="measure-detail-modal">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <button class="modal-close" aria-label="Close">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
-            <div class="measure-detail">
-                <h2>Measure <span id="detail-measure-number">1</span></h2>
-                <div class="detail-score">
-                    <span class="detail-accuracy" id="detail-measure-score">85%</span>
-                    <span class="detail-label">Accuracy</span>
-                </div>
-                <div class="note-breakdown" id="note-breakdown">
-                    <!-- Note details will be inserted here -->
-                </div>
-                <div class="detail-actions">
-                    <button class="btn btn-primary" id="close-detail-btn">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
 
@@ -490,16 +421,16 @@
     <script src="src/js/parsers/musicxml-parser.js"></script>
     <script src="src/js/audio/audio-engine.js"></script>
     <script src="src/js/audio/pitch-detector.js"></script>
-    <script src="src/js/audio/precision-tuner.js"></script>
     <script src="src/js/audio/instrument-detector.js"></script>
     <script src="src/js/audio/metronome.js"></script>
     <script src="src/js/analysis/performance-comparator.js"></script>
     <script src="src/js/components/sheet-music-renderer.js"></script>
-    <script src="src/js/components/tuner-gauge.js"></script>
     <script src="src/js/components/heat-map-renderer.js"></script>
+    <script src="src/js/components/zoom-controller.js"></script>
+    <script src="src/js/components/community-browser.js"></script>
     <script src="src/js/services/performance-history.js"></script>
-    <script src="src/js/services/imslp-client.js"></script>
-    <script src="src/js/services/omr-client.js"></script>
+    <script src="src/js/services/community-library.js"></script>
+    <script src="src/js/services/omr-uploader.js"></script>
     <script src="src/js/metrics/accuracy-scorer.js"></script>
     <script src="src/js/metrics/rhythm-analyzer.js"></script>
     <script src="src/js/utils/animations.js"></script>
