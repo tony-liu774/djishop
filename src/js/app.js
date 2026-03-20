@@ -216,6 +216,21 @@ class ConcertmasterApp {
         document.getElementById('start-practice-btn')?.addEventListener('click', () => {
             this.togglePractice();
         });
+
+        // Practice metronome toggle
+        document.getElementById('practice-metronome-btn')?.addEventListener('click', async () => {
+            if (!this.metronome.audioContext) {
+                await this.metronome.init();
+            }
+            this.metronome.toggle();
+
+            const btn = document.getElementById('practice-metronome-btn');
+            btn.classList.toggle('active', this.metronome.isPlaying);
+
+            if (this.metronome.isPlaying) {
+                this.showToast('Metronome started', 'info');
+            }
+        });
     }
 
     setupMetronome() {
@@ -549,12 +564,27 @@ class ConcertmasterApp {
         }
 
         this.isPracticing = true;
+
+        // Initialize rhythm analyzer with score tempo
+        const tempo = this.currentScore.tempo || 120;
+        this.rhythmAnalyzer.setTempo(tempo);
+
+        // Calculate expected note intervals based on score time signature
+        const expectedIntervals = this.calculateExpectedIntervals();
+        this.rhythmAnalyzer.setExpectedIntervals(expectedIntervals);
+
+        // Track note timings
+        this.lastNoteTime = null;
+        this.beatStartTime = Date.now();
+        this.currentBeatCount = 0;
+
         this.sessionData = {
             scoreId: this.currentScore.id,
             startTime: Date.now(),
             notes: [],
             pitchAccuracy: [],
-            timingAccuracy: []
+            timingAccuracy: [],
+            timingDeviations: []
         };
 
         // Update UI
@@ -571,7 +601,32 @@ class ConcertmasterApp {
             this.processAudio(data);
         }, 50);
 
-        this.showToast('Practice started - play your instrument', 'success');
+        // Start metronome if it's enabled
+        if (this.metronome.isPlaying) {
+            this.showToast('Practice started with metronome', 'success');
+        } else {
+            this.showToast('Practice started - play your instrument', 'success');
+        }
+    }
+
+    calculateExpectedIntervals() {
+        // Estimate expected intervals between notes based on tempo
+        // This is a simplified version - in production, parse actual note durations from MusicXML
+        const msPerBeat = 60000 / this.rhythmAnalyzer.tempo;
+        const intervals = [];
+
+        if (!this.currentScore) return intervals;
+
+        // Get all notes from the score
+        const allNotes = this.currentScore.getAllNotes ? this.currentScore.getAllNotes() : [];
+
+        // Estimate intervals based on typical note values
+        // Default to quarter note intervals
+        for (let i = 0; i < allNotes.length; i++) {
+            intervals.push(msPerBeat);
+        }
+
+        return intervals;
     }
 
     stopPractice() {
@@ -610,6 +665,43 @@ class ConcertmasterApp {
         const result = this.pitchDetector.process(data.timeData);
 
         if (result) {
+            // Calculate timing deviation if we have previous note time
+            const currentTime = Date.now();
+            let timingDeviation = 0;
+            let timingStatus = 'on-time';
+
+            if (this.lastNoteTime) {
+                const interval = currentTime - this.lastNoteTime;
+                const expectedInterval = this.rhythmAnalyzer.expectedIntervals[0] || (60000 / this.rhythmAnalyzer.tempo);
+                timingDeviation = interval - expectedInterval;
+
+                // Determine if early, late, or on time
+                // Threshold: within 100ms is "on time"
+                if (timingDeviation < -100) {
+                    timingStatus = 'early';
+                } else if (timingDeviation > 100) {
+                    timingStatus = 'late';
+                } else {
+                    timingStatus = 'on-time';
+                }
+
+                // Calculate timing accuracy (0-100)
+                const timingAccuracy = Math.max(0, 100 - Math.abs(timingDeviation) / expectedInterval * 100);
+
+                // Store timing data
+                if (this.sessionData) {
+                    this.sessionData.timingAccuracy.push(timingAccuracy);
+                    this.sessionData.timingDeviations.push(timingDeviation);
+                }
+
+                // Add timing info to result for display
+                result.timingDeviation = timingDeviation;
+                result.timingStatus = timingStatus;
+                result.timingAccuracy = timingAccuracy;
+            }
+
+            this.lastNoteTime = currentTime;
+
             // Compare against sheet music if score is loaded
             if (this.currentScore && this.performanceComparator) {
                 const comparison = this.performanceComparator.compare(result);
@@ -642,7 +734,9 @@ class ConcertmasterApp {
                                 timestamp: Date.now(),
                                 measure: measure,
                                 accuracy: accuracy,
-                                matched: comparison.matched
+                                matched: comparison.matched,
+                                timingDeviation: timingDeviation,
+                                timingStatus: timingStatus
                             });
                         }
                     }
@@ -668,6 +762,8 @@ class ConcertmasterApp {
         const pitchMarker = document.getElementById('pitch-marker');
         const centsDisplay = document.getElementById('cents-display');
         const timingDisplay = document.getElementById('timing-display');
+        const timingMarker = document.getElementById('timing-marker');
+        const timingStatus = document.getElementById('timing-status');
 
         if (noteDisplay) {
             noteDisplay.textContent = noteInfo.name;
@@ -699,9 +795,41 @@ class ConcertmasterApp {
             }
         }
 
-        // Update timing (placeholder)
+        // Update timing display
         if (timingDisplay) {
-            timingDisplay.textContent = '0ms';
+            const deviation = noteInfo.timingDeviation || 0;
+            const sign = deviation > 0 ? '+' : '';
+            timingDisplay.textContent = sign + Math.round(deviation) + 'ms';
+        }
+
+        // Update timing marker position and color
+        if (timingMarker) {
+            const deviation = noteInfo.timingDeviation || 0;
+            // Map deviation to 0-100% range (-200ms to +200ms)
+            const maxDeviation = 200;
+            const percent = Math.max(-maxDeviation, Math.min(maxDeviation, deviation)) + maxDeviation;
+            timingMarker.style.left = (percent / (maxDeviation * 2) * 100) + '%';
+
+            // Remove previous classes
+            timingMarker.classList.remove('early', 'late', 'on-time');
+
+            // Add appropriate class based on timing status
+            const status = noteInfo.timingStatus || 'on-time';
+            timingMarker.classList.add(status);
+        }
+
+        // Update timing status indicator
+        if (timingStatus) {
+            const status = noteInfo.timingStatus || 'on-time';
+            timingStatus.className = 'timing-status ' + status;
+
+            if (status === 'early') {
+                timingStatus.textContent = 'Early';
+            } else if (status === 'late') {
+                timingStatus.textContent = 'Late';
+            } else {
+                timingStatus.textContent = 'On Time';
+            }
         }
     }
 
@@ -718,6 +846,13 @@ class ConcertmasterApp {
         const minutes = Math.floor(duration / 60000);
         const seconds = Math.floor((duration % 60000) / 1000);
         document.getElementById('session-duration').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        // Add timing analysis message if available
+        const timingAnalysisEl = document.getElementById('timing-analysis');
+        if (timingAnalysisEl && score.timingAnalysis) {
+            timingAnalysisEl.textContent = score.timingAnalysis.message;
+            timingAnalysisEl.className = 'timing-analysis ' + score.timingAnalysis.status;
+        }
 
         // Update heat map with session data
         if (this.heatMapRenderer && this.sessionData) {
