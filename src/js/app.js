@@ -71,6 +71,7 @@ class ConcertmasterApp {
         this.performanceComparator = new PerformanceComparator();
         this.rhythmAnalyzer = new RhythmAnalyzer();
         this.accuracyScorer = new AccuracyScorer();
+        this.instrumentDetector = new InstrumentDetector();
 
         // Get DOM elements
         this.views = {
@@ -549,13 +550,23 @@ class ConcertmasterApp {
         }
 
         this.isPracticing = true;
+        this.lastNoteTime = null;
+        this.lastInstrumentCheck = 0;
         this.sessionData = {
             scoreId: this.currentScore.id,
             startTime: Date.now(),
             notes: [],
             pitchAccuracy: [],
-            timingAccuracy: []
+            timingAccuracy: [],
+            detectedInstrument: this.selectedInstrument
         };
+
+        // Set rhythm analyzer tempo
+        if (this.currentScore.tempo) {
+            this.rhythmAnalyzer.setTempo(this.currentScore.tempo);
+        } else {
+            this.rhythmAnalyzer.setTempo(120);
+        }
 
         // Update UI
         const startBtn = document.getElementById('start-practice-btn');
@@ -634,15 +645,32 @@ class ConcertmasterApp {
                         result.accuracy = accuracy;
                         result.matched = comparison.matched;
 
+                        // Track timing accuracy
+                        const currentTime = Date.now();
+                        if (this.lastNoteTime) {
+                            const interval = currentTime - this.lastNoteTime;
+                            const timingAccuracy = this.rhythmAnalyzer.calculateNoteDuration(
+                                this.sessionData.notes.length,
+                                interval
+                            );
+                            result.timingAccuracy = timingAccuracy;
+
+                            if (this.sessionData) {
+                                this.sessionData.timingAccuracy.push(timingAccuracy);
+                            }
+                        }
+                        this.lastNoteTime = currentTime;
+
                         // Store in session data
                         if (this.sessionData) {
                             this.sessionData.pitchAccuracy.push(accuracy);
                             this.sessionData.notes.push({
                                 note: result,
-                                timestamp: Date.now(),
+                                timestamp: currentTime,
                                 measure: measure,
                                 accuracy: accuracy,
-                                matched: comparison.matched
+                                matched: comparison.matched,
+                                timingAccuracy: result.timingAccuracy
                             });
                         }
                     }
@@ -699,9 +727,11 @@ class ConcertmasterApp {
             }
         }
 
-        // Update timing (placeholder)
-        if (timingDisplay) {
-            timingDisplay.textContent = '0ms';
+        // Update timing display
+        if (timingDisplay && noteInfo.timingAccuracy !== undefined) {
+            timingDisplay.textContent = Math.round(noteInfo.timingAccuracy) + '%';
+        } else if (timingDisplay) {
+            timingDisplay.textContent = '--';
         }
     }
 

@@ -43,27 +43,30 @@ class MusicXMLParser {
             const title = doc.querySelector('work-title, movement-title')?.textContent || 'Untitled';
             const composer = identification?.querySelector('creator')?.textContent || 'Unknown';
 
-            // Validate we have at least one part
+            // Get all parts - validate we have at least one
             const parts = doc.querySelectorAll('part');
             if (parts.length === 0) {
                 throw new Error('Invalid MusicXML: no parts found in score');
             }
 
-        // Create score
-        const score = new Score(title, composer);
+            // Create score
+            const score = new Score(title, composer);
 
-        // Get divisions (ticks per quarter note)
-        const partList = doc.querySelector('part-list');
-        score.divisions = parseInt(doc.querySelector('divisions')?.textContent) || 1;
+            // Get divisions (ticks per quarter note)
+            const partList = doc.querySelector('part-list');
+            score.divisions = parseInt(doc.querySelector('divisions')?.textContent) || 1;
 
-        // Parse parts
-        const parts = doc.querySelectorAll('part');
-        parts.forEach((partElement, index) => {
-            const part = this.parsePart(partElement, index);
-            score.addPart(part);
-        });
+            // Parse parts
+            parts.forEach((partElement, index) => {
+                const part = this.parsePart(partElement, index);
+                score.addPart(part);
+            });
 
-        return score;
+            return score;
+        } catch (error) {
+            console.error('Error parsing MusicXML document:', error);
+            throw error;
+        }
     }
 
     parsePart(partElement, index) {
