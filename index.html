@@ -323,7 +323,7 @@
                         </div>
                     </label>
                     <label class="import-option">
-                        <input type="file" accept="image/*" capture="environment" hidden>
+                        <input type="file" id="scan-file-input" accept="image/*" capture="environment" hidden>
                         <div class="import-option-content">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -407,6 +407,32 @@
         </div>
     </div>
 
+    <!-- Measure Detail Modal -->
+    <div class="modal" id="measure-detail-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+            <div class="measure-detail">
+                <h2>Measure <span id="detail-measure-number">1</span></h2>
+                <div class="detail-score">
+                    <span class="detail-accuracy" id="detail-measure-score">85%</span>
+                    <span class="detail-label">Accuracy</span>
+                </div>
+                <div class="note-breakdown" id="note-breakdown">
+                    <!-- Note details will be inserted here -->
+                </div>
+                <div class="detail-actions">
+                    <button class="btn btn-primary" id="close-detail-btn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
 
@@ -421,6 +447,8 @@
     <script src="src/js/components/sheet-music-renderer.js"></script>
     <script src="src/js/components/heat-map-renderer.js"></script>
     <script src="src/js/services/performance-history.js"></script>
+    <script src="src/js/services/imslp-client.js"></script>
+    <script src="src/js/services/omr-client.js"></script>
     <script src="src/js/metrics/accuracy-scorer.js"></script>
     <script src="src/js/metrics/rhythm-analyzer.js"></script>
     <script src="src/js/utils/animations.js"></script>

@@ -454,6 +454,37 @@ a:hover {
     color: var(--primary);
 }
 
+.session-improvement {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+}
+
+.improvement-trend {
+    font-weight: 600;
+    font-size: var(--text-sm);
+}
+
+.improvement-trend.improving {
+    color: var(--success);
+}
+
+.improvement-trend.declining {
+    color: var(--error);
+}
+
+.improvement-trend.stable {
+    color: var(--warning);
+}
+
+.improvement-sessions, .last-score {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
 /* Empty State */
 .empty-state {
     grid-column: 1 / -1;
@@ -1123,6 +1154,78 @@ a:hover {
     display: flex;
     justify-content: center;
     gap: var(--space-4);
+}
+
+/* Measure Detail Modal */
+.measure-detail {
+    text-align: center;
+}
+
+.detail-score {
+    margin-bottom: var(--space-6);
+}
+
+.detail-accuracy {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.detail-label {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.note-breakdown {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: var(--space-6);
+    text-align: left;
+}
+
+.note-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-2);
+}
+
+.note-item .note-name {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.note-item .note-accuracy {
+    font-weight: 600;
+}
+
+.note-item .note-accuracy.good {
+    color: var(--success);
+}
+
+.note-item .note-accuracy.okay {
+    color: var(--warning);
+}
+
+.note-item .note-accuracy.poor {
+    color: var(--error);
+}
+
+.note-item .cents-deviation {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-left: var(--space-2);
+}
+
+.detail-actions {
+    display: flex;
+    justify-content: center;
 }
 
 /* Toast Notifications */
