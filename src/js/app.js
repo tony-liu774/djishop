@@ -25,6 +25,7 @@ class ConcertmasterApp {
 
         // UI Components
         this.sheetMusicRenderer = null;
+        this.followTheBall = null;
         this.heatMapRenderer = null;
 
         // DOM Elements
@@ -92,6 +93,12 @@ class ConcertmasterApp {
         if (sheetContainer) {
             this.sheetMusicRenderer = new SheetMusicRenderer(sheetContainer);
             this.sheetMusicRenderer.init();
+        }
+
+        // Initialize follow-the-ball cursor
+        if (sheetContainer) {
+            this.followTheBall = new FollowTheBall(sheetContainer, this.sheetMusicRenderer);
+            this.followTheBall.init();
         }
 
         // Initialize heat map renderer
@@ -480,6 +487,12 @@ class ConcertmasterApp {
             this.sheetMusicRenderer.setScore(score);
         }
 
+        // Initialize follow-the-ball cursor with score
+        if (this.followTheBall) {
+            this.followTheBall.setScore(score);
+            this.followTheBall.reset();
+        }
+
         // Update UI
         const titleEl = document.getElementById('current-piece-title');
         if (titleEl) titleEl.textContent = score.title;
@@ -653,6 +666,19 @@ class ConcertmasterApp {
                     this.sheetMusicRenderer.setCursorPosition(
                         this.performanceComparator.getProgress()
                     );
+                }
+
+                // Update follow-the-ball cursor
+                if (this.followTheBall) {
+                    const progress = this.performanceComparator.getProgress();
+                    if (progress) {
+                        const isOnPitch = accuracy >= 80;
+                        this.followTheBall.setPosition(
+                            progress.measureIndex || 0,
+                            progress.noteIndex || 0,
+                            isOnPitch
+                        );
+                    }
                 }
             }
 
