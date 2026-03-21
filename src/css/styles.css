@@ -406,6 +406,69 @@ a:hover {
     opacity: 1;
 }
 
+/* Focused state for keyboard navigation */
+.library-card.focused {
+    transform: translateY(-4px) scale(1.02);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg), 0 0 30px var(--primary-glow);
+    outline: none;
+}
+
+.library-card.focused::before {
+    opacity: 1;
+}
+
+/* Soft glow effects on interactive elements */
+.btn-primary:focus-visible,
+.btn-icon:focus-visible,
+.preset-btn:focus-visible,
+.instrument-option:focus-visible {
+    box-shadow: 0 0 0 3px var(--primary-glow), var(--shadow-glow);
+}
+
+/* Lazy thumbnail styles */
+.lazy-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.lazy-thumbnail.loaded {
+    opacity: 1;
+}
+
+/* Screen reader only class */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Library grid zoom transform */
+.library-grid {
+    transition: transform var(--transition-normal);
+    transform-origin: top left;
+}
+
+/* Glow effect on score display */
+.score-value {
+    text-shadow: 0 0 20px var(--primary-glow);
+}
+
+/* Smooth cursor highlight animation */
+@keyframes cursorPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
 .library-card-thumbnail {
     width: 100%;
     height: 120px;
@@ -1284,6 +1347,7 @@ a:hover {
     color: var(--bg-deep);
 }
 
+<<<<<<< HEAD
 /* Follow-the-Ball Cursor */
 .follow-the-ball-container {
     position: absolute;
@@ -1579,231 +1643,43 @@ a:hover {
     opacity: 0.6;
 }
 
-/* ==============================================
-   Task 4: Integration & Polish - New Styles
-   ============================================== */
-
-/* Accessibility: Screen reader only */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
+/* Ensure typography uses theme fonts */
+body {
+    font-family: var(--font-body);
 }
 
-/* Accessibility: Focus styles */
-*:focus {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
 }
 
-*:focus:not(:focus-visible) {
-    outline: none;
+/* Consistent soft glow on active/focused elements */
+.nav-link:focus-visible,
+.mobile-nav-link:focus-visible {
+    box-shadow: 0 0 10px var(--primary-glow);
 }
 
-*:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-}
-
-/* Accessibility: Keyboard navigation indicators */
-.keyboard-focusable:focus {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-}
-
-/* Library card keyboard navigation */
-.library-card:focus {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-    transform: scale(1.02);
-}
-
-/* Glow effects for Midnight Conservatory theme */
-.glow-primary {
-    box-shadow: 0 0 20px var(--primary-glow), 0 0 40px var(--primary-glow);
-}
-
-.glow-success {
-    box-shadow: 0 0 20px var(--success-glow), 0 0 40px var(--success-glow);
-}
-
-.glow-error {
-    box-shadow: 0 0 20px var(--error-glow), 0 0 40px var(--error-glow);
-}
-
-/* Soft glow for active elements */
-.active-glow {
-    position: relative;
-}
-
-.active-glow::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    border-radius: inherit;
-    background: var(--primary);
-    opacity: 0;
-    filter: blur(8px);
-    transition: opacity var(--transition-normal);
-    z-index: -1;
-}
-
-.active-glow.active::after,
-.active-glow:focus::after {
-    opacity: 0.4;
-}
-
-/* Enhanced feedback panel glow */
-.feedback-panel {
-    background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    transition: box-shadow var(--transition-normal);
-}
-
-.feedback-panel.active {
-    box-shadow: 0 0 30px rgba(201, 162, 39, 0.2);
-}
-
-/* Pitch meter glow */
-.pitch-marker {
-    transition: box-shadow var(--transition-fast), background-color var(--transition-fast);
-}
-
-.pitch-marker.on-pitch {
-    box-shadow: 0 0 10px var(--success-glow);
-}
-
-.pitch-marker.sharp {
-    box-shadow: 0 0 10px rgba(221, 184, 50, 0.5);
-}
-
-.pitch-marker.flat {
-    box-shadow: 0 0 10px rgba(171, 58, 84, 0.5);
-}
-
-/* Timing display glow */
-.timing-display {
-    font-family: var(--font-mono);
-    font-size: var(--text-lg);
-    font-weight: 500;
-    transition: color var(--transition-fast), text-shadow var(--transition-fast);
-}
-
-.timing-display.good {
-    color: var(--success);
-    text-shadow: 0 0 10px var(--success-glow);
-}
-
-.timing-display.warning {
-    color: var(--warning);
-    text-shadow: 0 0 10px rgba(201, 162, 39, 0.5);
-}
-
-.timing-display.poor {
-    color: var(--error);
-    text-shadow: 0 0 10px var(--error-glow);
-}
-
-/* Accuracy score glow */
-.score-value {
-    transition: color var(--transition-fast), text-shadow var(--transition-fast);
-}
-
-.score-value.high {
-    color: var(--success);
-    text-shadow: 0 0 15px var(--success-glow);
-}
-
-.score-value.medium {
-    color: var(--warning);
-    text-shadow: 0 0 15px rgba(201, 162, 39, 0.5);
-}
-
-.score-value.low {
-    color: var(--error);
-    text-shadow: 0 0 15px var(--error-glow);
-}
-
-/* Library card glow on hover */
-.library-card {
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.library-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 0 20px var(--primary-glow);
-}
-
-.library-card:focus {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 0 30px var(--primary-glow);
-}
-
-/* Button glow effects */
-.btn-primary {
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.4s, height 0.4s;
-}
-
-.btn-primary:hover::before {
-    width: 200%;
-    height: 200%;
-}
-
-/* Metronome beat indicator glow */
+/* Metronome beat glow effect */
 .beat-dot.active {
-    box-shadow: 0 0 15px var(--primary-glow), 0 0 30px var(--primary-glow);
-    background: var(--primary);
+    animation: beatPulse 0.3s ease-out;
 }
 
-/* Zoom controls glow */
-.zoom-btn:hover {
-    box-shadow: 0 0 15px var(--primary-glow);
+@keyframes beatPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
 }
 
-/* Toggle button glow */
-.toggle-btn.active {
-    box-shadow: 0 0 15px var(--primary-glow);
+/* Smooth transitions for all interactive elements */
+.library-card,
+.btn,
+.preset-btn,
+.instrument-option,
+.toggle-btn,
+.preset-btn {
+    will-change: transform, box-shadow;
 }
 
-/* Smooth 60fps animations */
-@media (prefers-reduced-motion: no-preference) {
-    .smooth-animation {
-        animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        will-change: transform, opacity;
-    }
-
-    .follow-the-ball-container {
-        will-change: transform;
-        transform: translateZ(0);
-        backface-visibility: hidden;
-    }
-}
-
-/* Reduced motion preference */
+/* Performance: reduce animations on motion preference */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -1812,484 +1688,4 @@ a:hover {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-}
-
-/* Performance: GPU acceleration hints */
-.cursor-accelerated {
-    transform: translateZ(0);
-    will-change: transform;
-    backface-visibility: hidden;
-    perspective: 1000px;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    :root {
-        --primary: #ffd700;
-        --success: #00ff00;
-        --error: #ff0000;
-        --text-primary: #ffffff;
-        --border: #ffffff;
-    }
-}
-
-/* Lazy loaded images */
-.lazy-thumbnail {
-    opacity: 0;
-    transition: opacity var(--transition-normal);
-}
-
-.lazy-thumbnail.loaded,
-.lazy-loaded {
-    opacity: 1;
-}
-
-/* ===========================================
-   Precision Tuner Styles
-   =========================================== */
-
-.tuner-view {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: var(--space-4);
-}
-
-.tuner-header {
-    text-align: center;
-    margin-bottom: var(--space-8);
-}
-
-.tuner-header h1 {
-    margin-bottom: var(--space-2);
-}
-
-.tuner-instrument-selector {
-    display: flex;
-    justify-content: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-8);
-    flex-wrap: wrap;
-}
-
-.tuner-instrument-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-5);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.tuner-instrument-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.tuner-instrument-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--bg-deep);
-}
-
-.tuner-instrument-btn .instrument-icon {
-    font-size: 1.5rem;
-}
-
-/* Tuner Display */
-.tuner-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-6);
-    padding: var(--space-8);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    margin-bottom: var(--space-6);
-}
-
-.note-reference {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-}
-
-.reference-note {
-    font-family: var(--font-mono);
-    color: var(--primary);
-    font-weight: 600;
-}
-
-/* Needle Gauge */
-.needle-gauge-container {
-    width: 280px;
-    height: 160px;
-    position: relative;
-    opacity: 0;
-    transform: scale(0.9);
-    transition: opacity var(--transition-normal), transform var(--transition-normal);
-}
-
-.needle-gauge-container.visible {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.needle-gauge {
-    width: 100%;
-    height: 100%;
-    position: relative;
-}
-
-.gauge-arc {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 140px;
-    border: 3px solid var(--border);
-    border-bottom: none;
-    border-radius: 140px 140px 0 0;
-    background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
-    box-shadow: inset 0 -10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.gauge-arc::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 10%;
-    right: 10%;
-    height: 130px;
-    border: 2px solid var(--primary);
-    border-bottom: none;
-    border-radius: 130px 130px 0 0;
-    opacity: 0.3;
-}
-
-.gauge-markings {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 15px;
-}
-
-.marking {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-}
-
-.marking.center {
-    color: var(--primary);
-    font-weight: 600;
-}
-
-.marking.flat,
-.marking.sharp {
-    color: var(--error-light);
-}
-
-/* Needle */
-.needle {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 4px;
-    height: 110px;
-    background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary) 100%);
-    border-radius: 2px 2px 0 0;
-    transform-origin: bottom center;
-    transform: rotate(0deg);
-    transition: transform 150ms ease-out;
-    box-shadow: 0 0 10px var(--primary-glow);
-}
-
-.needle-glow {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 12px;
-    height: 12px;
-    background: var(--primary-light);
-    border-radius: 50%;
-    box-shadow:
-        0 0 20px var(--primary),
-        0 0 40px var(--primary-glow),
-        0 0 60px var(--primary-glow);
-    animation: needleGlow 1.5s ease-in-out infinite alternate;
-}
-
-@keyframes needleGlow {
-    from {
-        box-shadow:
-            0 0 15px var(--primary),
-            0 0 30px var(--primary-glow),
-            0 0 45px var(--primary-glow);
-    }
-    to {
-        box-shadow:
-            0 0 25px var(--primary),
-            0 0 50px var(--primary-glow),
-            0 0 80px var(--primary-glow);
-    }
-}
-
-.gauge-center-mark {
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 16px;
-    height: 16px;
-    background: var(--primary);
-    border-radius: 50%;
-    box-shadow: 0 0 15px var(--primary-glow);
-}
-
-/* Current Note Display */
-.current-note-display {
-    text-align: center;
-}
-
-.current-note {
-    display: block;
-    font-family: var(--font-heading);
-    font-size: 5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1;
-    text-shadow: 0 0 30px var(--primary-glow);
-}
-
-.current-octave {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--text-2xl);
-    color: var(--text-muted);
-    margin-top: var(--space-1);
-}
-
-/* Pitch Feedback */
-.pitch-feedback {
-    padding: var(--space-3) var(--space-6);
-    border-radius: var(--radius-full);
-    font-size: var(--text-lg);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: all var(--transition-fast);
-}
-
-.pitch-feedback.waiting {
-    background: var(--bg-elevated);
-    color: var(--text-muted);
-}
-
-.pitch-feedback.in-tune {
-    background: var(--success);
-    color: var(--text-primary);
-    box-shadow: 0 0 20px var(--success-glow);
-    animation: inTunePulse 1s ease-in-out infinite;
-}
-
-@keyframes inTunePulse {
-    0%, 100% {
-        box-shadow: 0 0 20px var(--success-glow);
-    }
-    50% {
-        box-shadow: 0 0 35px var(--success-glow);
-    }
-}
-
-.pitch-feedback.sharp,
-.pitch-feedback.flat {
-    background: var(--error);
-    color: var(--text-primary);
-    box-shadow: 0 0 15px var(--error-glow);
-}
-
-/* Cents Display */
-.cents-display {
-    font-family: var(--font-mono);
-    font-size: var(--text-3xl);
-    font-weight: 600;
-    color: var(--text-secondary);
-    transition: color var(--transition-fast);
-}
-
-.cents-display.emerald {
-    color: var(--success-light);
-}
-
-.cents-display.crimson {
-    color: var(--error-light);
-}
-
-.cents-unit {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    margin-left: var(--space-1);
-}
-
-/* Frequency Display */
-.frequency-display {
-    font-family: var(--font-mono);
-    font-size: var(--text-lg);
-    color: var(--text-muted);
-}
-
-.frequency-value {
-    color: var(--text-secondary);
-}
-
-/* Tuner Controls */
-.tuner-controls {
-    display: flex;
-    justify-content: center;
-    margin-bottom: var(--space-6);
-}
-
-.tuner-start-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-4) var(--space-8);
-    background: var(--primary);
-    border: none;
-    border-radius: var(--radius-full);
-    color: var(--bg-deep);
-    font-size: var(--text-lg);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    box-shadow: 0 0 20px var(--primary-glow);
-}
-
-.tuner-start-btn:hover {
-    background: var(--primary-light);
-    box-shadow: 0 0 30px var(--primary-glow);
-    transform: scale(1.02);
-}
-
-.tuner-start-btn.active {
-    background: var(--error);
-    box-shadow: 0 0 20px var(--error-glow);
-}
-
-.tuner-start-btn.active:hover {
-    background: var(--error-light);
-    box-shadow: 0 0 30px var(--error-glow);
-}
-
-.tuner-start-btn svg {
-    width: 24px;
-    height: 24px;
-}
-
-/* Open Strings Display */
-.tuner-open-strings {
-    text-align: center;
-    padding: var(--space-4);
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-}
-
-.open-strings-label {
-    display: block;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    margin-bottom: var(--space-3);
-}
-
-.open-strings-list {
-    display: flex;
-    justify-content: center;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-}
-
-.open-string-note {
-    display: inline-block;
-    padding: var(--space-2) var(--space-4);
-    background: var(--bg-elevated);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    font-family: var(--font-mono);
-    font-size: var(--text-base);
-    color: var(--primary);
-    transition: all var(--transition-fast);
-}
-
-.open-string-note:hover {
-    border-color: var(--primary);
-    box-shadow: 0 0 10px var(--primary-glow);
-}
-
-/* Tuner Status */
-.tuner-status {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    margin-top: var(--space-4);
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-}
-
-.tuner-status .status-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--text-muted);
-    transition: all var(--transition-fast);
-}
-
-.tuner-status.active .status-indicator {
-    background: var(--success-light);
-    box-shadow: 0 0 10px var(--success-glow);
-    animation: statusPulse 1.5s ease-in-out infinite;
-}
-
-.tuner-status.error .status-indicator {
-    background: var(--error-light);
-    box-shadow: 0 0 10px var(--error-glow);
-}
-
-@keyframes statusPulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-
-/* Responsive Tuner */
-@media (max-width: 480px) {
-    .tuner-display {
-        padding: var(--space-6);
-    }
-
-    .needle-gauge-container {
-        width: 240px;
-        height: 140px;
-    }
-
-    .current-note {
-        font-size: 3.5rem;
-    }
-}
 }
