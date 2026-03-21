@@ -678,6 +678,11 @@ class ConcertmasterApp {
                             progress.noteIndex || 0,
                             isOnPitch
                         );
+
+                        // Auto-advance in practice mode when note is matched
+                        if (comparison.matched && this.followTheBall.practiceMode) {
+                            this.followTheBall.advanceToNextNote();
+                        }
                     }
                 }
             }
