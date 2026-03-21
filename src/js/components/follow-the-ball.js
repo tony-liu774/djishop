@@ -1,458 +1,344 @@
 /**
  * FollowTheBall Cursor Component
- * Provides a visually tracking cursor that moves across sheet music during practice
- * Features amber glow effect, smooth animation, and configurable speed
+ * Visual cursor that tracks progress across sheet music during practice
  */
 
 class FollowTheBall {
-    constructor(container, sheetMusicRenderer) {
+    constructor(container) {
         this.container = container;
-        this.sheetMusicRenderer = sheetMusicRenderer;
-
-        // Cursor state
-        this.enabled = false;
-        this.position = { x: 0, y: 0 };
-        this.targetPosition = { x: 0, y: 0 };
-        this.isOnPitch = false;
-        this.isPlaying = false;
-        this.isPaused = false;
-
-        // Animation settings
-        this.speed = 1.0; // 0.5x to 2x
-        this.smoothing = 0.15;
-        this.glowIntensity = 0;
-        this.bounceOffset = 0;
-        this.isBouncing = false;
-
-        // Practice mode
-        this.practiceMode = false;
-        this.autoAdvance = false;
-        this.currentNoteIndex = 0;
-        this.upcomingHighlight = null;
-
-        // Notes tracking
-        this.notes = [];
-        this.measureWidth = 0;
-        this.noteWidth = 30;
-
-        // UI Elements
         this.cursorElement = null;
-        this.controlsElement = null;
         this.glowElement = null;
+        this.enabled = false;
+        this.speed = 1; // 0.5x to 2x
+        this.isPaused = false;
+        this.practiceMode = false; // Auto-advance without audio
+        this.currentPosition = 0; // 0-1 progress
+        this.targetPosition = 0;
+        this.animationFrame = null;
+        this.sheetMusicRenderer = null;
 
-        // Animation frame
-        this.animationFrameId = null;
+        // Settings from localStorage
+        this.loadSettings();
+    }
 
-        // LocalStorage key
-        this.storageKey = 'concertmaster_cursor_enabled';
+    loadSettings() {
+        const savedEnabled = localStorage.getItem('followTheBallEnabled');
+        const savedSpeed = localStorage.getItem('followTheBallSpeed');
+        const savedPracticeMode = localStorage.getItem('practiceMode');
+
+        if (savedEnabled !== null) {
+            this.enabled = savedEnabled === 'true';
+        }
+        if (savedSpeed !== null) {
+            this.speed = parseFloat(savedSpeed);
+        }
+        if (savedPracticeMode !== null) {
+            this.practiceMode = savedPracticeMode === 'true';
+        }
+    }
+
+    saveSettings() {
+        localStorage.setItem('followTheBallEnabled', this.enabled);
+        localStorage.setItem('followTheBallSpeed', this.speed);
+        localStorage.setItem('practiceMode', this.practiceMode);
     }
 
     init() {
-        // Check localStorage for saved preference
-        const savedEnabled = localStorage.getItem(this.storageKey);
-        this.enabled = savedEnabled === 'true';
-
-        // Create cursor DOM elements
-        this.createCursorElements();
-
-        // Create controls UI
-        this.createControls();
-
-        // Setup settings toggle handler
-        this.setupSettingsToggle();
-
-        // Start animation loop
-        this.startAnimationLoop();
-
-        // Initial render state
-        if (!this.enabled) {
-            this.hideCursor();
-        }
+        this.createCursorElement();
+        this.setupEventListeners();
+        this.updateUI();
     }
 
-    createCursorElements() {
-        // Create cursor container
+    createCursorElement() {
+        // Create container for cursor
+        const cursorContainer = document.createElement('div');
+        cursorContainer.className = 'follow-the-ball-container';
+        cursorContainer.id = 'follow-the-ball-container';
+
+        // Create glow effect
+        this.glowElement = document.createElement('div');
+        this.glowElement.className = 'follow-the-ball-glow';
+
+        // Create the ball cursor
         this.cursorElement = document.createElement('div');
         this.cursorElement.className = 'follow-the-ball';
-        this.cursorElement.style.display = 'none';
 
-        // Create glow effect element
-        this.glowElement = document.createElement('div');
-        this.glowElement.className = 'cursor-glow';
-
-        // Create the ball
-        const ball = document.createElement('div');
-        ball.className = 'cursor-ball';
-
-        // Create inner highlight
-        const highlight = document.createElement('div');
-        highlight.className = 'cursor-highlight';
-
-        ball.appendChild(highlight);
-        this.glowElement.appendChild(ball);
-        this.cursorElement.appendChild(this.glowElement);
-        this.container.appendChild(this.cursorElement);
-    }
-
-    createControls() {
-        // Create cursor controls container
-        this.controlsElement = document.createElement('div');
-        this.controlsElement.className = 'cursor-controls';
-        this.controlsElement.style.display = 'none';
-
-        // Speed control
-        const speedControl = document.createElement('div');
-        speedControl.className = 'cursor-control-group';
-        speedControl.innerHTML = `
-            <label for="cursor-speed-slider">Speed</label>
-            <input type="range" id="cursor-speed-slider" min="0.5" max="2" step="0.1" value="1">
-            <span class="speed-value">1.0x</span>
+        // Inner ball with gradient
+        this.cursorElement.innerHTML = `
+            <div class="follow-the-ball-inner">
+                <div class="follow-the-ball-highlight"></div>
+            </div>
         `;
 
-        // Jump to measure
-        const jumpControl = document.createElement('div');
-        jumpControl.className = 'cursor-control-group';
-        jumpControl.innerHTML = `
-            <label for="jump-to-measure">Measure</label>
-            <input type="number" id="jump-to-measure" min="1" value="1">
-            <button class="btn btn-small" id="jump-btn">Go</button>
-        `;
+        // Append to container
+        cursorContainer.appendChild(this.glowElement);
+        cursorContainer.appendChild(this.cursorElement);
 
-        // Play/Pause button
-        const playPauseBtn = document.createElement('button');
-        playPauseBtn.className = 'cursor-control-btn';
-        playPauseBtn.id = 'cursor-play-pause';
-        playPauseBtn.innerHTML = `
-            <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-            </svg>
-            <svg class="pause-icon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
-                <rect x="6" y="4" width="4" height="16"/>
-                <rect x="14" y="4" width="4" height="16"/>
-            </svg>
-        `;
-
-        // Practice mode toggle
-        const practiceToggle = document.createElement('div');
-        practiceToggle.className = 'cursor-control-group';
-        practiceToggle.innerHTML = `
-            <label for="practice-mode-toggle">Practice Mode</label>
-            <button class="toggle-btn" id="practice-mode-toggle" role="switch" aria-checked="false">
-                <span class="toggle-slider"></span>
-            </button>
-        `;
-
-        // Append controls
-        this.controlsElement.appendChild(speedControl);
-        this.controlsElement.appendChild(jumpControl);
-        this.controlsElement.appendChild(playPauseBtn);
-        this.controlsElement.appendChild(practiceToggle);
-
-        // Add to practice view or settings area
-        const practiceView = document.getElementById('practice-view');
-        if (practiceView) {
-            practiceView.appendChild(this.controlsElement);
+        // Add to sheet music container
+        if (this.container) {
+            this.container.appendChild(cursorContainer);
         }
 
-        // Setup event handlers
-        this.setupControlHandlers();
+        // Initially hidden
+        cursorContainer.style.opacity = '0';
+        cursorContainer.style.pointerEvents = 'none';
     }
 
-    setupControlHandlers() {
-        // Speed slider
-        const speedSlider = document.getElementById('cursor-speed-slider');
-        const speedValue = speedSlider?.parentElement?.querySelector('.speed-value');
-        speedSlider?.addEventListener('input', (e) => {
-            this.speed = parseFloat(e.target.value);
-            if (speedValue) {
-                speedValue.textContent = this.speed.toFixed(1) + 'x';
-            }
-        });
-
-        // Jump to measure
-        const jumpBtn = document.getElementById('jump-btn');
-        const jumpInput = document.getElementById('jump-to-measure');
-        jumpBtn?.addEventListener('click', () => {
-            const measureNum = parseInt(jumpInput?.value) || 1;
-            this.jumpToMeasure(measureNum);
-        });
-
-        // Play/Pause
-        const playPauseBtn = document.getElementById('cursor-play-pause');
-        playPauseBtn?.addEventListener('click', () => {
-            this.togglePlayPause();
-        });
-
-        // Practice mode toggle
-        const practiceToggle = document.getElementById('practice-mode-toggle');
-        practiceToggle?.addEventListener('click', () => {
-            this.practiceMode = !this.practiceMode;
-            practiceToggle.classList.toggle('active', this.practiceMode);
-            practiceToggle.setAttribute('aria-checked', this.practiceMode.toString());
-        });
-    }
-
-    setupSettingsToggle() {
+    setupEventListeners() {
+        // Settings toggle
         const cursorToggle = document.getElementById('show-cursor-toggle');
         if (cursorToggle) {
-            // Set initial state based on localStorage
-            cursorToggle.classList.toggle('active', this.enabled);
-            cursorToggle.setAttribute('aria-checked', this.enabled.toString());
-
             cursorToggle.addEventListener('click', () => {
-                this.enabled = !this.enabled;
-                localStorage.setItem(this.storageKey, this.enabled.toString());
+                this.toggle();
+            });
+        }
 
-                cursorToggle.classList.toggle('active', this.enabled);
-                cursorToggle.setAttribute('aria-checked', this.enabled.toString());
+        // Speed slider
+        const speedSlider = document.getElementById('cursor-speed-slider');
+        const speedValue = document.getElementById('cursor-speed-value');
+        if (speedSlider && speedValue) {
+            speedSlider.addEventListener('input', (e) => {
+                this.speed = parseFloat(e.target.value);
+                speedValue.textContent = this.speed.toFixed(1) + 'x';
+                this.saveSettings();
+            });
+        }
 
-                if (this.enabled) {
-                    this.showCursor();
-                } else {
-                    this.hideCursor();
+        // Jump to measure
+        const jumpBtn = document.getElementById('cursor-jump-btn');
+        const jumpInput = document.getElementById('cursor-jump-input');
+        if (jumpBtn && jumpInput) {
+            jumpBtn.addEventListener('click', () => {
+                const measure = parseInt(jumpInput.value);
+                if (measure > 0) {
+                    this.jumpToMeasure(measure);
                 }
             });
         }
+
+        // Practice mode toggle
+        const practiceModeToggle = document.getElementById('practice-mode-toggle');
+        if (practiceModeToggle) {
+            practiceModeToggle.addEventListener('click', () => {
+                this.practiceMode = !this.practiceMode;
+                practiceModeToggle.classList.toggle('active', this.practiceMode);
+                practiceModeToggle.setAttribute('aria-checked', this.practiceMode);
+                this.saveSettings();
+            });
+        }
+
+        // Pause/Play cursor
+        const pauseBtn = document.getElementById('cursor-pause-btn');
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => {
+                this.togglePause();
+            });
+        }
+
+        // Listen for cursor position updates from sheet music renderer
+        document.addEventListener('setCursorPosition', (e) => {
+            if (e.detail && e.detail.position !== undefined) {
+                this.setTargetPosition(e.detail.position);
+            }
+        });
     }
 
-    showCursor() {
-        if (this.cursorElement) {
-            this.cursorElement.style.display = 'block';
+    updateUI() {
+        const cursorToggle = document.getElementById('show-cursor-toggle');
+        const cursorControls = document.getElementById('cursor-controls-group');
+        const speedSlider = document.getElementById('cursor-speed-slider');
+        const speedValue = document.getElementById('cursor-speed-value');
+        const practiceModeToggle = document.getElementById('practice-mode-toggle');
+
+        if (cursorToggle) {
+            cursorToggle.classList.toggle('active', this.enabled);
+            cursorToggle.setAttribute('aria-checked', this.enabled);
         }
-        if (this.controlsElement) {
-            this.controlsElement.style.display = 'flex';
+
+        if (cursorControls) {
+            cursorControls.style.display = this.enabled ? 'block' : 'none';
+        }
+
+        if (speedSlider) {
+            speedSlider.value = this.speed;
+        }
+        if (speedValue) {
+            speedValue.textContent = this.speed.toFixed(1) + 'x';
+        }
+
+        if (practiceModeToggle) {
+            practiceModeToggle.classList.toggle('active', this.practiceMode);
+            practiceModeToggle.setAttribute('aria-checked', this.practiceMode);
         }
     }
 
-    hideCursor() {
-        if (this.cursorElement) {
-            this.cursorElement.style.display = 'none';
-        }
-        if (this.controlsElement) {
-            this.controlsElement.style.display = 'none';
+    toggle() {
+        this.enabled = !this.enabled;
+        this.updateUI();
+        this.saveSettings();
+
+        if (this.enabled) {
+            this.show();
+        } else {
+            this.hide();
         }
     }
 
-    startAnimationLoop() {
+    show() {
+        const container = document.getElementById('follow-the-ball-container');
+        if (container) {
+            container.style.opacity = '1';
+            container.style.pointerEvents = 'auto';
+        }
+    }
+
+    hide() {
+        const container = document.getElementById('follow-the-ball-container');
+        if (container) {
+            container.style.opacity = '0';
+            container.style.pointerEvents = 'none';
+        }
+    }
+
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        const pauseBtn = document.getElementById('cursor-pause-btn');
+        if (pauseBtn) {
+            if (this.isPaused) {
+                pauseBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    Resume Cursor
+                `;
+            } else {
+                pauseBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                        <rect x="6" y="4" width="4" height="16"/>
+                        <rect x="14" y="4" width="4" height="16"/>
+                    </svg>
+                    Pause Cursor
+                `;
+            }
+        }
+    }
+
+    setTargetPosition(position) {
+        if (this.isPaused) return;
+
+        this.targetPosition = Math.max(0, Math.min(1, position));
+        this.animateToTarget();
+    }
+
+    animateToTarget() {
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+        }
+
         const animate = () => {
-            if (this.enabled && !this.isPaused) {
-                // Smooth interpolation towards target position
-                this.position.x += (this.targetPosition.x - this.position.x) * (this.smoothing * this.speed);
-                this.position.y += (this.targetPosition.y - this.position.y) * (this.smoothing * this.speed);
+            // Smooth interpolation based on speed
+            const diff = this.targetPosition - this.currentPosition;
+            const step = diff * 0.15 * this.speed;
 
-                // Pulse glow effect
-                const time = Date.now() / 1000;
-                this.glowIntensity = 0.5 + 0.5 * Math.sin(time * 3);
+            if (Math.abs(diff) > 0.001) {
+                this.currentPosition += step;
+                this.updatePosition();
 
-                // Bounce animation
-                if (this.isBouncing) {
-                    this.bounceOffset = Math.sin(time * 15) * 5;
-                } else {
-                    this.bounceOffset = 0;
+                // Bounce animation when getting close to target
+                if (Math.abs(diff) < 0.05) {
+                    this.triggerBounce();
                 }
 
-                // Update DOM
-                this.updateCursorPosition();
+                this.animationFrame = requestAnimationFrame(animate);
+            } else {
+                this.currentPosition = this.targetPosition;
+                this.updatePosition();
             }
-            this.animationFrameId = requestAnimationFrame(animate);
         };
-        animate();
+
+        this.animationFrame = requestAnimationFrame(animate);
     }
 
-    updateCursorPosition() {
-        if (!this.cursorElement) return;
+    updatePosition() {
+        if (!this.container) return;
 
-        const x = this.position.x;
-        const y = this.position.y + this.bounceOffset;
+        const rect = this.container.getBoundingClientRect();
+        const containerScrollLeft = this.container.scrollLeft || 0;
+        const containerScrollTop = this.container.scrollTop || 0;
 
-        // Position the cursor
-        this.cursorElement.style.left = x + 'px';
-        this.cursorElement.style.top = y + 'px';
+        // Calculate position based on progress (0-1)
+        // Use horizontal position primarily, but also handle vertical
+        const x = containerScrollLeft + (rect.width * this.currentPosition);
+        const y = containerScrollTop + (rect.height / 2);
 
-        // Update glow color based on pitch accuracy
-        const glowColor = this.isOnPitch ? 'rgba(201, 162, 39, ' : 'rgba(139, 41, 66, ';
+        // Update cursor position
+        if (this.cursorElement) {
+            this.cursorElement.style.left = `${x}px`;
+            this.cursorElement.style.top = `${y}px`;
+        }
+
+        // Update glow position
         if (this.glowElement) {
-            this.glowElement.style.setProperty('--glow-color', glowColor);
+            this.glowElement.style.left = `${x}px`;
+            this.glowElement.style.top = `${y}px`;
         }
-
-        // Update ball color class
-        const ball = this.cursorElement.querySelector('.cursor-ball');
-        if (ball) {
-            ball.classList.toggle('on-pitch', this.isOnPitch);
-            ball.classList.toggle('off-pitch', !this.isOnPitch);
-        }
-    }
-
-    setPosition(measureIndex, noteIndex, isOnPitch = false) {
-        this.isOnPitch = isOnPitch;
-
-        // Calculate target position from sheet music renderer
-        if (this.sheetMusicRenderer) {
-            const coords = this.getNoteCoordinates(measureIndex, noteIndex);
-            if (coords) {
-                this.targetPosition = { x: coords.x, y: coords.y };
-            }
-        }
-
-        // Trigger bounce animation on note detection
-        this.triggerBounce();
-
-        // Update current note index for practice mode
-        this.currentNoteIndex = noteIndex;
-    }
-
-    getNoteCoordinates(measureIndex, noteIndex) {
-        if (!this.sheetMusicRenderer || !this.sheetMusicRenderer.score) return null;
-
-        const canvas = this.sheetMusicRenderer.getCanvas();
-        if (!canvas) return null;
-
-        const startX = 100;
-        const measures = this.sheetMusicRenderer.score.parts[0]?.measures || [];
-        if (measureIndex >= measures.length) return null;
-
-        const measureWidth = (canvas.width - 140) / Math.min(measures.length, 8);
-        const measureX = startX + measureIndex * measureWidth;
-
-        const measure = measures[measureIndex];
-        if (!measure || noteIndex >= measure.notes.length) return null;
-
-        const noteX = measureX + 20 + noteIndex * this.noteWidth;
-        const noteY = this.getNoteY(measure.notes[noteIndex]);
-
-        return { x: noteX, y: noteY };
-    }
-
-    getNoteY(note) {
-        const steps = { 'C': 0, 'D': 1, 'E': 2, 'F': 3, 'G': 4, 'A': 5, 'B': 6 };
-        const stepValue = steps[note.pitch.step] || 0;
-        const octaveOffset = (note.pitch.octave - 4) * 7;
-        const position = stepValue + octaveOffset;
-        const middleLinePosition = 6;
-        const diff = position - middleLinePosition;
-
-        const staffY = 80;
-        const lineSpacing = 10;
-        return staffY + 20 - (diff * (lineSpacing / 2));
     }
 
     triggerBounce() {
-        this.isBouncing = true;
-        setTimeout(() => {
-            this.isBouncing = false;
-        }, 200);
-    }
-
-    jumpToMeasure(measureNum) {
-        const measureIndex = measureNum - 1;
-        this.currentNoteIndex = 0;
-
-        if (this.sheetMusicRenderer && this.sheetMusicRenderer.score) {
-            const measures = this.sheetMusicRenderer.score.parts[0]?.measures || [];
-            if (measureIndex < measures.length) {
-                const note = measures[measureIndex].notes[0];
-                if (note) {
-                    this.setPosition(measureIndex, 0, false);
-                }
-            }
+        if (this.cursorElement) {
+            this.cursorElement.classList.add('bouncing');
+            setTimeout(() => {
+                this.cursorElement.classList.remove('bouncing');
+            }, 300);
         }
     }
 
-    togglePlayPause() {
-        this.isPaused = !this.isPaused;
+    // Called when a note is detected - cursor bounces on beat
+    onNoteDetected() {
+        this.triggerBounce();
 
-        const playPauseBtn = document.getElementById('cursor-play-pause');
-        const playIcon = playPauseBtn?.querySelector('.play-icon');
-        const pauseIcon = playPauseBtn?.querySelector('.pause-icon');
-
-        if (playIcon && pauseIcon) {
-            playIcon.style.display = this.isPaused ? 'block' : 'none';
-            pauseIcon.style.display = this.isPaused ? 'none' : 'block';
+        // In practice mode, auto-advance
+        if (this.practiceMode && !this.isPaused) {
+            this.currentPosition = Math.min(1, this.currentPosition + 0.02);
+            this.updatePosition();
         }
     }
 
-    setScore(score) {
-        this.notes = [];
-        this.currentNoteIndex = 0;
+    jumpToMeasure(measureNumber) {
+        if (!this.sheetMusicRenderer || !this.sheetMusicRenderer.score) return;
 
-        // Extract all notes from score
-        if (score && score.parts && score.parts.length > 0) {
-            const part = score.parts[0];
-            if (part.measures) {
-                part.measures.forEach((measure, measureIndex) => {
-                    measure.notes.forEach((note, noteIndex) => {
-                        this.notes.push({
-                            measureIndex,
-                            noteIndex,
-                            note
-                        });
-                    });
-                });
-            }
-        }
+        const score = this.sheetMusicRenderer.score;
+        const totalMeasures = score.parts[0]?.measures?.length || 1;
+        const measureProgress = measureNumber / totalMeasures;
+
+        this.setTargetPosition(measureProgress);
     }
 
-    // Handle zoom/pan from sheet music renderer
-    handleZoom(scale, offsetX) {
-        if (!this.cursorElement) return;
+    // Connect to sheet music renderer to receive position updates
+    connectToRenderer(renderer) {
+        this.sheetMusicRenderer = renderer;
 
-        // Adjust cursor position based on zoom/pan
-        const transform = `scale(${scale}) translateX(${offsetX}px)`;
-        // The cursor is positioned absolutely, so we adjust manually
-    }
-
-    // Highlight upcoming notes in practice mode
-    highlightUpcomingNotes(count = 3) {
-        if (!this.practiceMode || !this.sheetMusicRenderer) return;
-
-        // This would integrate with the sheet music renderer to highlight upcoming notes
-        // The sheet music renderer would handle the actual rendering of highlights
-    }
-
-    // Auto-advance to next note (practice mode)
-    advanceToNextNote() {
-        if (!this.practiceMode || this.currentNoteIndex >= this.notes.length - 1) return;
-
-        this.currentNoteIndex++;
-        const nextNote = this.notes[this.currentNoteIndex];
-        if (nextNote) {
-            this.setPosition(nextNote.measureIndex, nextNote.noteIndex, false);
-        }
-    }
-
-    // Reset cursor to beginning
-    reset() {
-        this.currentNoteIndex = 0;
-        if (this.notes.length > 0) {
-            const firstNote = this.notes[0];
-            this.setPosition(firstNote.measureIndex, firstNote.noteIndex, false);
-        }
-    }
-
-    // Get current position info
-    getPosition() {
-        return {
-            measureIndex: this.currentNoteIndex >= 0 && this.notes[this.currentNoteIndex]
-                ? this.notes[this.currentNoteIndex].measureIndex
-                : 0,
-            noteIndex: this.currentNoteIndex,
-            isOnPitch: this.isOnPitch
+        // Override setCursorPosition to also update our cursor
+        const originalSetCursorPosition = renderer.setCursorPosition.bind(renderer);
+        renderer.setCursorPosition = (position) => {
+            originalSetCursorPosition(position);
+            this.setTargetPosition(position);
         };
     }
 
-    // Cleanup
-    destroy() {
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-        }
-        if (this.cursorElement && this.cursorElement.parentNode) {
-            this.cursorElement.parentNode.removeChild(this.cursorElement);
-        }
-        if (this.controlsElement && this.controlsElement.parentNode) {
-            this.controlsElement.parentNode.removeChild(this.controlsElement);
-        }
+    // Highlight upcoming notes in the score
+    highlightUpcomingNotes(progress) {
+        // This would be called to highlight the next few notes
+        // Implementation depends on the sheet music renderer structure
+    }
+
+    reset() {
+        this.currentPosition = 0;
+        this.targetPosition = 0;
+        this.isPaused = false;
+        this.updatePosition();
+        this.togglePause(); // Reset pause state
     }
 }
 
-// Export for global use
 window.FollowTheBall = FollowTheBall;
