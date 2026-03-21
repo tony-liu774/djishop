@@ -22,17 +22,12 @@ class ConcertmasterApp {
         // Performance tracking
         this.sessionData = null;
         this.accuracyScorer = null;
-
-        // Post-session AI Summary modules
-        this.aiSummaryGenerator = null;
-        this.practiceLoopController = null;
-
-        // Onboarding service
-        this.onboardingService = null;
+        this.intonationAnalyzer = null;
 
         // UI Components
         this.sheetMusicRenderer = null;
         this.heatMapRenderer = null;
+        this.followTheBall = null;
 
         // DOM Elements
         this.views = {};
@@ -40,6 +35,19 @@ class ConcertmasterApp {
 
         // Tap tempo tracking
         this.tapTimes = [];
+
+        // Cross-feature integration state
+        this.cursorSpeed = 0;
+        this.lastCursorPosition = null;
+        this.lastCursorTime = 0;
+        this.libraryZoomLevel = 1;
+        this.focusedCardIndex = -1;
+
+        // Debounce timer for rhythm analysis
+        this.rhythmAnalysisDebounce = null;
+
+        // Screen reader live region
+        this.liveRegion = null;
     }
 
     async init() {
@@ -56,7 +64,9 @@ class ConcertmasterApp {
             this.setupPracticeControls();
             this.setupMetronome();
             this.setupSettings();
-            this.setupOnboarding();
+
+            // Initialize accessibility features
+            this.initAccessibility();
 
             // Initialize audio engine
             await this.initializeAudio();
@@ -79,31 +89,7 @@ class ConcertmasterApp {
         this.performanceComparator = new PerformanceComparator();
         this.rhythmAnalyzer = new RhythmAnalyzer();
         this.accuracyScorer = new AccuracyScorer();
-
-        // Create AI Summary modules
-        this.aiSummaryGenerator = new AISummaryGenerator();
-        this.practiceLoopController = new PracticeLoopController();
-
-        // Create onboarding service
-        this.onboardingService = new OnboardingService();
-        this.onboardingService.setOnComplete((data) => {
-            // Apply instrument settings after onboarding
-            if (data && data.instrument) {
-                this.selectedInstrument = data.instrument;
-                this.updateInstrumentSettings();
-                console.log('Onboarding complete with instrument:', data.instrument);
-            }
-        });
-
-        // Setup practice loop callbacks
-        this.practiceLoopController.setOnLoopChange((state) => {
-            console.log('Practice loop changed:', state);
-        });
-
-        this.practiceLoopController.setOnComplete((result) => {
-            console.log('Practice loop completed:', result);
-            this.showToast('Practice loop completed! Great work!', 'success');
-        });
+        this.intonationAnalyzer = new IntonationAnalyzer();
 
         // Get DOM elements
         this.views = {
@@ -125,6 +111,11 @@ class ConcertmasterApp {
         if (sheetContainer) {
             this.sheetMusicRenderer = new SheetMusicRenderer(sheetContainer);
             this.sheetMusicRenderer.init();
+
+            // Initialize follow-the-ball cursor
+            this.followTheBall = new FollowTheBall(sheetContainer);
+            this.followTheBall.init();
+            this.followTheBall.connectToRenderer(this.sheetMusicRenderer);
         }
 
         // Initialize heat map renderer
@@ -388,111 +379,225 @@ class ConcertmasterApp {
         });
     }
 
-    setupOnboarding() {
-        // Check if onboarding should be shown
-        if (!this.onboardingService || this.onboardingService.hasCompletedOnboarding) {
-            return;
-        }
-
-        // Show onboarding modal
-        const modal = document.getElementById('onboarding-modal');
-        if (modal) {
-            modal.classList.add('active');
-        }
-
-        // Setup step navigation
-        const showStep = (stepName) => {
-            document.querySelectorAll('.onboarding-step').forEach(step => {
-                step.style.display = 'none';
-            });
-            const targetStep = document.getElementById(`onboarding-step-${stepName}`);
-            if (targetStep) {
-                targetStep.style.display = 'flex';
-            }
-            // Update progress dots
-            document.querySelectorAll('.progress-dot').forEach(dot => {
-                dot.classList.remove('active');
-                if (dot.dataset.step === stepName) {
-                    dot.classList.add('active');
-                }
-            });
-        };
-
-        // Welcome step
-        document.getElementById('onboarding-start-btn')?.addEventListener('click', () => {
-            this.onboardingService.nextStep();
-            showStep('permissions');
-        });
-
-        // Permissions step
-        document.getElementById('request-mic-btn')?.addEventListener('click', async () => {
-            const granted = await this.onboardingService.requestMicrophonePermission();
-            if (granted) {
-                this.onboardingService.nextStep();
-                showStep('instrument');
-            } else {
-                this.showToast('Microphone access is needed for practice', 'error');
-            }
-        });
-
-        document.getElementById('skip-permissions-btn')?.addEventListener('click', () => {
-            this.onboardingService.nextStep();
-            showStep('instrument');
-        });
-
-        // Instrument selection
-        document.querySelectorAll('.instrument-option-large').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.instrument-option-large').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            });
-        });
-
-        document.getElementById('confirm-instrument-btn')?.addEventListener('click', () => {
-            const selectedBtn = document.querySelector('.instrument-option-large.active');
-            if (selectedBtn) {
-                const instrument = selectedBtn.dataset.instrument;
-                this.onboardingService.selectInstrument(instrument);
-
-                // Update summary
-                const range = this.onboardingService.getSelectedInstrumentRange();
-                if (range) {
-                    document.getElementById('summary-instrument').textContent = range.name;
-                    document.getElementById('summary-range').textContent = `${Math.round(range.minFreq)} - ${Math.round(range.maxFreq)} Hz`;
-                }
-
-                this.onboardingService.nextStep();
-                showStep('calibration');
-
-                // Auto-advance after calibration animation
-                setTimeout(() => {
-                    this.onboardingService.nextStep();
-                    showStep('complete');
-                }, 2000);
-            }
-        });
-
-        document.getElementById('calibration-complete-btn')?.addEventListener('click', () => {
-            this.onboardingService.nextStep();
-            showStep('complete');
-        });
-
-        // Finish onboarding
-        document.getElementById('onboarding-finish-btn')?.addEventListener('click', () => {
-            this.onboardingService.finishOnboarding();
-            modal?.classList.remove('active');
-            this.showToast('Welcome to Virtual Concertmaster!', 'success');
-        });
-
-        // Start at welcome step
-        showStep('welcome');
-    }
-
     updateInstrumentSettings() {
         // Adjust pitch detection range based on instrument
         const range = this.pitchDetector.getInstrumentRange(this.selectedInstrument);
         this.pitchDetector.minFrequency = range.min;
         this.pitchDetector.maxFrequency = range.max;
+    }
+
+    // ============================================
+    // Cross-Feature Integration
+    // ============================================
+
+    updateCursorSpeed(position) {
+        const now = Date.now();
+        if (this.lastCursorPosition !== null && this.lastCursorTime > 0) {
+            const timeDelta = now - this.lastCursorTime;
+            if (timeDelta > 0) {
+                const positionDelta = Math.abs(position - this.lastCursorPosition);
+                // Calculate speed as positions per second
+                this.cursorSpeed = (positionDelta / timeDelta) * 1000;
+            }
+        }
+        this.lastCursorPosition = position;
+        this.lastCursorTime = now;
+
+        // Apply cursor speed to rhythm analysis (affects sensitivity)
+        if (this.rhythmAnalyzer) {
+            const tempo = this.metronome?.bpm || 120;
+            this.rhythmAnalyzer.setTempo(tempo);
+            // Higher speed = more lenient timing analysis
+            const sensitivityMultiplier = Math.max(0.5, Math.min(1.5, 1 + (this.cursorSpeed / 100)));
+            this.rhythmAnalyzer.timingSensitivity = sensitivityMultiplier;
+        }
+    }
+
+    zoomLibrary(direction) {
+        // Zoom in/out during cursor/focus movement
+        const minZoom = 0.8;
+        const maxZoom = 1.5;
+        const zoomStep = 0.1;
+
+        if (direction === 'in') {
+            this.libraryZoomLevel = Math.min(maxZoom, this.libraryZoomLevel + zoomStep);
+        } else if (direction === 'out') {
+            this.libraryZoomLevel = Math.max(minZoom, this.libraryZoomLevel - zoomStep);
+        }
+
+        // Apply zoom to library cards
+        const grid = document.getElementById('library-grid');
+        if (grid) {
+            grid.style.transform = `scale(${this.libraryZoomLevel})`;
+            grid.style.transformOrigin = 'top left';
+        }
+    }
+
+    persistThreeAxisScores() {
+        // Persist three-axis scores with session data
+        if (!this.sessionData) return;
+
+        // Calculate three-axis scores: pitch, timing, rhythm
+        const pitchScore = this.sessionData.pitchAccuracy.length > 0
+            ? this.sessionData.pitchAccuracy.reduce((a, b) => a + b, 0) / this.sessionData.pitchAccuracy.length
+            : 0;
+
+        const timingScore = this.sessionData.timingAccuracy.length > 0
+            ? this.sessionData.timingAccuracy.reduce((a, b) => a + b, 0) / this.sessionData.timingAccuracy.length
+            : pitchScore;
+
+        // Rhythm score based on beat deviation
+        const rhythmScore = this.rhythmAnalyzer
+            ? this.rhythmAnalyzer.calculateBeatDeviation()
+            : timingScore;
+
+        this.sessionData.threeAxisScores = {
+            pitch: Math.round(pitchScore),
+            timing: Math.round(timingScore),
+            rhythm: Math.round(rhythmScore)
+        };
+
+        // Store in localStorage for persistence across sessions
+        try {
+            const history = JSON.parse(localStorage.getItem('sessionHistory') || '[]');
+            history.push({
+                scoreId: this.currentScore?.id,
+                timestamp: Date.now(),
+                scores: this.sessionData.threeAxisScores
+            });
+            // Keep last 50 sessions
+            if (history.length > 50) {
+                history.shift();
+            }
+            localStorage.setItem('sessionHistory', JSON.stringify(history));
+        } catch (e) {
+            console.warn('Could not persist session data:', e);
+        }
+    }
+
+    // ============================================
+    // Accessibility
+    // ============================================
+
+    initAccessibility() {
+        // Create live region for screen reader announcements
+        this.liveRegion = document.createElement('div');
+        this.liveRegion.setAttribute('aria-live', 'polite');
+        this.liveRegion.setAttribute('aria-atomic', 'true');
+        this.liveRegion.className = 'sr-only';
+        this.liveRegion.style.cssText = 'position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;';
+        document.body.appendChild(this.liveRegion);
+
+        // Setup keyboard navigation for library
+        this.setupLibraryKeyboardNav();
+
+        // Add ARIA labels to feedback panel
+        this.setupFeedbackPanelARIA();
+    }
+
+    announceToScreenReader(message) {
+        if (this.liveRegion) {
+            this.liveRegion.textContent = '';
+            setTimeout(() => {
+                this.liveRegion.textContent = message;
+            }, 100);
+        }
+    }
+
+    setupLibraryKeyboardNav() {
+        const grid = document.getElementById('library-grid');
+        if (!grid) return;
+
+        // Make grid focusable
+        grid.setAttribute('tabindex', '0');
+        grid.setAttribute('role', 'listbox');
+        grid.setAttribute('aria-label', 'Music library');
+
+        document.addEventListener('keydown', (e) => {
+            // Only handle navigation when library view is active
+            if (!this.views.library?.classList.contains('active')) return;
+
+            const cards = grid.querySelectorAll('.library-card');
+            if (cards.length === 0) return;
+
+            switch (e.key) {
+                case 'ArrowRight':
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.focusedCardIndex = Math.min(this.focusedCardIndex + 1, cards.length - 1);
+                    this.focusLibraryCard(cards);
+                    this.zoomLibrary('in');
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.focusedCardIndex = Math.max(this.focusedCardIndex - 1, 0);
+                    this.focusLibraryCard(cards);
+                    this.zoomLibrary('out');
+                    break;
+                case 'Enter':
+                case ' ':
+                    if (this.focusedCardIndex >= 0 && cards[this.focusedCardIndex]) {
+                        e.preventDefault();
+                        cards[this.focusedCardIndex].click();
+                    }
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    this.focusedCardIndex = 0;
+                    this.focusLibraryCard(cards);
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    this.focusedCardIndex = cards.length - 1;
+                    this.focusLibraryCard(cards);
+                    break;
+            }
+        });
+    }
+
+    focusLibraryCard(cards) {
+        cards.forEach((card, index) => {
+            card.classList.toggle('focused', index === this.focusedCardIndex);
+            card.setAttribute('aria-selected', index === this.focusedCardIndex ? 'true' : 'false');
+            if (index === this.focusedCardIndex) {
+                card.focus();
+            }
+        });
+    }
+
+    setupFeedbackPanelARIA() {
+        const feedbackPanel = document.querySelector('.feedback-panel');
+        if (feedbackPanel) {
+            feedbackPanel.setAttribute('role', 'region');
+            feedbackPanel.setAttribute('aria-label', 'Performance feedback');
+
+            // Add ARIA labels to indicators
+            const pitchIndicator = feedbackPanel.querySelector('.pitch-indicator');
+            if (pitchIndicator) {
+                pitchIndicator.setAttribute('role', 'group');
+                pitchIndicator.setAttribute('aria-label', 'Pitch accuracy indicator');
+            }
+
+            const timingIndicator = feedbackPanel.querySelector('.timing-indicator');
+            if (timingIndicator) {
+                timingIndicator.setAttribute('role', 'group');
+                timingIndicator.setAttribute('aria-label', 'Timing accuracy indicator');
+            }
+
+            const scoreDisplay = feedbackPanel.querySelector('.score-display');
+            if (scoreDisplay) {
+                scoreDisplay.setAttribute('aria-live', 'polite');
+            }
+        }
+    }
+
+    announceScoreChange(score) {
+        if (score !== undefined) {
+            this.announceToScreenReader(`Score updated: ${Math.round(score)}%`);
+        } else if (this.currentScore) {
+            this.announceToScreenReader(`Selected: ${this.currentScore.title} by ${this.currentScore.composer}. Ready to practice.`);
+        }
     }
 
     async loadLibrary() {
@@ -521,13 +626,15 @@ class ConcertmasterApp {
             return;
         }
 
-        grid.innerHTML = scores.map(score => `
-            <div class="library-card" data-id="${score.id}">
+        grid.innerHTML = scores.map((score, index) => `
+            <div class="library-card" data-id="${score.id}" data-index="${index}" tabindex="0" role="option">
                 <div class="library-card-thumbnail">
+                    ${score.thumbnail ? `<img data-src="${score.thumbnail}" alt="" class="lazy-thumbnail" loading="lazy">` : `
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
                     </svg>
+                    `}
                 </div>
                 <h3 class="library-card-title">${score.title}</h3>
                 <p class="library-card-composer">${score.composer}</p>
@@ -538,6 +645,9 @@ class ConcertmasterApp {
             </div>
         `).join('');
 
+        // Setup lazy loading with IntersectionObserver
+        this.setupLazyLoading();
+
         // Add click handlers
         grid.querySelectorAll('.library-card').forEach(card => {
             card.addEventListener('click', () => {
@@ -545,6 +655,28 @@ class ConcertmasterApp {
                 this.selectScore(id);
             });
         });
+    }
+
+    setupLazyLoading() {
+        // Use IntersectionObserver for lazy loading thumbnails
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target.querySelector('.lazy-thumbnail');
+                        if (img && img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.classList.add('loaded');
+                            observer.unobserve(entry.target);
+                        }
+                    }
+                });
+            }, { rootMargin: '50px' });
+
+            document.querySelectorAll('.library-card').forEach(card => {
+                observer.observe(card);
+            });
+        }
     }
 
     formatDate(dateString) {
@@ -605,6 +737,12 @@ class ConcertmasterApp {
 
         this.currentScore = score;
 
+        // Remove session-ended state from sheet music container
+        const sheetContainer = document.getElementById('sheet-music-container');
+        if (sheetContainer) {
+            sheetContainer.classList.remove('session-ended');
+        }
+
         // Set up performance comparator with the score
         this.performanceComparator.setScore(score);
 
@@ -622,6 +760,9 @@ class ConcertmasterApp {
 
         // Switch to practice view
         this.showView('practice-view');
+
+        // Announce score change to screen readers
+        this.announceScoreChange();
     }
 
     async handleFileUpload(input) {
@@ -690,11 +831,6 @@ class ConcertmasterApp {
             timingAccuracy: []
         };
 
-        // Initialize AI Summary Generator for this session
-        if (this.aiSummaryGenerator) {
-            this.aiSummaryGenerator.startSession(this.currentScore.id);
-        }
-
         // Update UI
         const startBtn = document.getElementById('start-practice-btn');
         startBtn.innerHTML = `
@@ -709,6 +845,10 @@ class ConcertmasterApp {
             this.processAudio(data);
         }, 50);
 
+        // Reset analyzers for new session
+        this.rhythmAnalyzer.reset();
+        this.intonationAnalyzer.reset();
+
         this.showToast('Practice started - play your instrument', 'success');
     }
 
@@ -716,8 +856,22 @@ class ConcertmasterApp {
         this.isPracticing = false;
         this.audioEngine.stopListening();
 
+        // Persist three-axis scores before ending session
+        this.persistThreeAxisScores();
+
         // Calculate final scores
         const finalScore = this.accuracyScorer.calculateOverall(this.sessionData);
+
+        // Add session-ended state to sheet music container
+        const sheetContainer = document.getElementById('sheet-music-container');
+        if (sheetContainer) {
+            sheetContainer.classList.add('session-ended');
+        }
+
+        // Reset cursor when practice ends
+        if (this.followTheBall) {
+            this.followTheBall.reset();
+        }
 
         // Update UI
         const startBtn = document.getElementById('start-practice-btn');
@@ -748,6 +902,10 @@ class ConcertmasterApp {
         const result = this.pitchDetector.process(data.timeData);
 
         if (result) {
+            // Record note onset for rhythm analysis
+            const noteTimestamp = Date.now();
+            this.rhythmAnalyzer.recordNoteOnset(noteTimestamp);
+
             // Compare against sheet music if score is loaded
             if (this.currentScore && this.performanceComparator) {
                 const comparison = this.performanceComparator.compare(result);
@@ -771,45 +929,73 @@ class ConcertmasterApp {
                         result.measure = measure;
                         result.accuracy = accuracy;
                         result.matched = comparison.matched;
+                        result.timestamp = noteTimestamp;
+
+                        // Record to intonation analyzer
+                        this.intonationAnalyzer.recordNote(result);
+
+                        // Calculate rhythm score and record
+                        const rhythmScore = this.rhythmAnalyzer.calculateOverallTiming();
+                        this.intonationAnalyzer.recordRhythmScore(rhythmScore);
 
                         // Store in session data
                         if (this.sessionData) {
                             this.sessionData.pitchAccuracy.push(accuracy);
+                            this.sessionData.timingAccuracy.push(rhythmScore);
                             this.sessionData.notes.push({
                                 note: result,
-                                timestamp: Date.now(),
+                                timestamp: noteTimestamp,
                                 measure: measure,
                                 accuracy: accuracy,
+                                rhythmScore: rhythmScore,
                                 matched: comparison.matched
                             });
-
-                            // Log deviation to AI Summary Generator
-                            if (this.aiSummaryGenerator && !comparison.matched) {
-                                this.aiSummaryGenerator.logPitchDeviation({
-                                    measure: measure,
-                                    beat: 1, // Default beat
-                                    expectedPitch: comparison.expectedNote ? comparison.expectedNote.getName() + comparison.expectedNote.octave : '?',
-                                    actualPitch: result.name + result.octave,
-                                    deviationCents: result.centsDeviation,
-                                    expectedFrequency: expectedFreq,
-                                    actualFrequency: result.frequency
-                                });
-                            }
                         }
+
+                        // Debounced rhythm analysis - only analyze every 500ms
+                        this.debouncedRhythmAnalysis(result);
                     }
                 }
 
-                // Update cursor position
+                // Update cursor position and track speed for rhythm analysis
+                const progress = this.performanceComparator.getProgress();
+                this.updateCursorSpeed(progress);
+
                 if (this.sheetMusicRenderer) {
-                    this.sheetMusicRenderer.setCursorPosition(
+                    this.sheetMusicRenderer.setCursorPosition(progress);
+                }
+
+                // Update follow-the-ball cursor
+                if (this.followTheBall && this.followTheBall.enabled) {
+                    this.followTheBall.setTargetPosition(
                         this.performanceComparator.getProgress()
                     );
+
+                    // Trigger bounce on note detection
+                    this.followTheBall.onNoteDetected();
                 }
             }
 
             // Update UI with current note
             this.updateFeedbackDisplay(result);
         }
+    }
+
+    debouncedRhythmAnalysis(result) {
+        if (this.rhythmAnalysisDebounce) {
+            clearTimeout(this.rhythmAnalysisDebounce);
+        }
+
+        this.rhythmAnalysisDebounce = setTimeout(() => {
+            if (this.rhythmAnalyzer && result) {
+                this.rhythmAnalyzer.recordNoteOnset(Date.now());
+                const timingScore = this.rhythmAnalyzer.calculateOverallTiming();
+
+                if (this.sessionData) {
+                    this.sessionData.timingAccuracy.push(timingScore);
+                }
+            }
+        }, 500);
     }
 
     updateFeedbackDisplay(noteInfo) {
@@ -820,6 +1006,10 @@ class ConcertmasterApp {
         const centsDisplay = document.getElementById('cents-display');
         const timingDisplay = document.getElementById('timing-display');
 
+        // Get three-axis scores
+        const intonationScores = this.intonationAnalyzer.calculateIntonationScore();
+        const timingDeviation = this.intonationAnalyzer.getTimingDeviation();
+
         if (noteDisplay) {
             noteDisplay.textContent = noteInfo.name;
         }
@@ -827,10 +1017,11 @@ class ConcertmasterApp {
             octaveDisplay.textContent = noteInfo.octave;
         }
 
-        // Calculate accuracy
-        const accuracy = this.accuracyScorer.calculatePitchAccuracy(noteInfo);
+        // Use three-axis combined score for accuracy display
+        const combinedScore = intonationScores.overall;
         if (accuracyScore) {
-            accuracyScore.textContent = Math.round(accuracy) + '%';
+            // Animate score transition
+            this.animateScoreChange(accuracyScore, combinedScore);
         }
 
         // Update pitch meter (center is 0 cents)
@@ -840,185 +1031,218 @@ class ConcertmasterApp {
             pitchMarker.style.left = percent + '%';
             centsDisplay.textContent = (cents > 0 ? '+' : '') + cents + '¢';
 
-            // Color based on accuracy
+            // Color based on accuracy - emerald for good, crimson for poor
             if (Math.abs(cents) <= 10) {
-                pitchMarker.style.backgroundColor = 'var(--success)';
+                pitchMarker.style.backgroundColor = '#10b981'; // emerald
             } else if (Math.abs(cents) <= 25) {
-                pitchMarker.style.backgroundColor = 'var(--warning)';
+                pitchMarker.style.backgroundColor = '#f59e0b'; // amber
             } else {
-                pitchMarker.style.backgroundColor = 'var(--error)';
+                pitchMarker.style.backgroundColor = '#ef4444'; // crimson
             }
         }
 
-        // Update timing (placeholder)
+        // Update timing display with actual milliseconds
         if (timingDisplay) {
-            timingDisplay.textContent = '0ms';
+            const ms = timingDeviation;
+            const sign = ms > 0 ? '+' : '';
+            timingDisplay.textContent = sign + ms + 'ms';
+
+            // Color based on timing accuracy
+            if (Math.abs(ms) <= 50) {
+                timingDisplay.style.color = '#10b981'; // emerald
+            } else if (Math.abs(ms) <= 100) {
+                timingDisplay.style.color = '#f59e0b'; // amber
+            } else {
+                timingDisplay.style.color = '#ef4444'; // crimson
+            }
+        }
+
+        // Update intonation indicator if present
+        const intonationIndicator = document.getElementById('intonation-indicator');
+        if (intonationIndicator) {
+            intonationIndicator.textContent = Math.round(intonationScores.overall) + '%';
+            intonationIndicator.style.color = IntonationAnalyzer.getScoreColor(intonationScores.overall);
         }
     }
 
-    async showSessionSummary(score) {
+    /**
+     * Animate score value change with smooth transition
+     */
+    animateScoreChange(element, targetScore) {
+        const currentText = element.textContent;
+        const currentScore = parseInt(currentText) || 0;
+        const duration = 300;
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Ease out cubic
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            const score = Math.round(currentScore + (targetScore - currentScore) * easeProgress);
+
+            element.textContent = score + '%';
+
+            // Update color based on score
+            if (score >= 80) {
+                element.style.color = '#10b981'; // emerald
+            } else if (score >= 60) {
+                element.style.color = '#f59e0b'; // amber
+            } else {
+                element.style.color = '#ef4444'; // crimson
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    showSessionSummary(score) {
         const modal = document.getElementById('session-summary-modal');
         if (!modal) return;
 
-        // Update summary data
-        document.getElementById('final-score').textContent = Math.round(score.overall) + '%';
-        document.getElementById('pitch-accuracy').textContent = Math.round(score.pitch) + '%';
-        document.getElementById('timing-accuracy').textContent = Math.round(score.timing) + '%';
+        // Get intonation analysis for three-axis breakdown
+        const intonationScores = this.intonationAnalyzer.calculateIntonationScore();
+        const weakestAxis = this.intonationAnalyzer.getWeakestAxis();
+
+        // Update summary data with three-axis scores
+        document.getElementById('final-score').textContent = Math.round(intonationScores.overall) + '%';
+        document.getElementById('pitch-accuracy').textContent = Math.round(intonationScores.pitch) + '%';
+        document.getElementById('timing-accuracy').textContent = Math.round(intonationScores.rhythm) + '%';
+
+        // Add intonation accuracy if element exists
+        const intonationAccuracyEl = document.getElementById('intonation-accuracy');
+        if (intonationAccuracyEl) {
+            intonationAccuracyEl.textContent = Math.round(intonationScores.transition) + '%';
+        }
 
         const duration = this.sessionData?.startTime ? Date.now() - this.sessionData.startTime : 0;
         const minutes = Math.floor(duration / 60000);
         const seconds = Math.floor((duration % 60000) / 1000);
         document.getElementById('session-duration').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
 
+        // Add recommendation based on weakest axis
+        this.addRecommendation(weakestAxis);
+
+        // Render radar chart for three-axis visualization
+        this.renderRadarChart(intonationScores);
+
         // Update heat map with session data
         if (this.heatMapRenderer && this.sessionData) {
             this.heatMapRenderer.setData(this.sessionData);
-            // Enable post-session mode with Deep Navy background
-            this.heatMapRenderer.enablePostSessionMode(true);
             this.heatMapRenderer.render();
         }
-
-        // Show AI feedback section
-        const aiSection = document.getElementById('ai-feedback-section');
-        const aiLoading = document.getElementById('ai-loading');
-        const aiAssessment = document.getElementById('ai-assessment');
-        const aiStrengths = document.getElementById('ai-strengths');
-        const aiGuidance = document.getElementById('ai-guidance');
-        const practiceLoopSection = document.getElementById('practice-loop-section');
-
-        if (aiSection) {
-            aiSection.style.display = 'block';
-            // Show loading state
-            if (aiLoading) aiLoading.style.display = 'flex';
-            if (aiAssessment) aiAssessment.innerHTML = '';
-            if (aiStrengths) aiStrengths.innerHTML = '';
-            if (aiGuidance) aiGuidance.innerHTML = '';
-            if (practiceLoopSection) practiceLoopSection.style.display = 'none';
-        }
-
-        // Generate AI summary
-        let aiSummary = null;
-        if (this.aiSummaryGenerator) {
-            aiSummary = await this.aiSummaryGenerator.generateSummary();
-        }
-
-        // Hide loading, show AI feedback
-        if (aiLoading) aiLoading.style.display = 'none';
-
-        if (aiSummary && aiSummary.ai) {
-            const ai = aiSummary.ai;
-
-            // Display overall assessment (The Praise)
-            if (aiAssessment) {
-                // New format: overall_assessment is The Praise paragraph
-                aiAssessment.textContent = ai.overall_assessment || 'Great practice session!';
-            }
-
-            // Display diagnosis and fix (The Diagnosis + The Fix)
-            if (aiStrengths) {
-                // Use strengths section to show diagnosis
-                const diagnosis = ai.diagnosis || '';
-                const fix = ai.fix || ai.specific_guidance || '';
-
-                aiStrengths.innerHTML = `
-                    <h4>The Diagnosis</h4>
-                    <p>${diagnosis}</p>
-                    <h4>The Fix</h4>
-                    <p>${fix}</p>
-                `;
-            }
-
-            // Display guidance (kept for backward compatibility)
-            if (aiGuidance) {
-                aiGuidance.innerHTML = `
-                    <h4>Practice Focus</h4>
-                    <p>${ai.fix || ai.specific_guidance || ''}</p>
-                `;
-            }
-
-            // Update heat map with problem measures
-            if (this.heatMapRenderer && ai.recommended_measures) {
-                this.heatMapRenderer.setProblemMeasures(ai.recommended_measures);
-                this.heatMapRenderer.render();
-            }
-
-            // Show practice loop section
-            if (practiceLoopSection && ai.recommended_measures && ai.recommended_measures.length > 0) {
-                const loopMeasuresEl = document.getElementById('loop-measures');
-                const loopTempoEl = document.getElementById('loop-tempo-value');
-
-                if (loopMeasuresEl) {
-                    loopMeasuresEl.innerHTML = ai.recommended_measures
-                        .map(m => `<span class="loop-measure">M${m}</span>`)
-                        .join('');
-                }
-
-                if (loopTempoEl) {
-                    loopTempoEl.textContent = (ai.suggested_tempo || 80) + ' BPM';
-                }
-
-                // Initialize practice loop controller
-                if (this.practiceLoopController) {
-                    this.practiceLoopController.init({
-                        measures: ai.recommended_measures,
-                        suggestedTempo: ai.suggested_tempo || 80,
-                        maxLoops: 5
-                    });
-                }
-
-                practiceLoopSection.style.display = 'block';
-            }
-        } else {
-            // Show fallback feedback if no AI summary
-            if (aiAssessment) {
-                const stats = this.aiSummaryGenerator?.sessionLogger?.getSummaryStats();
-                const problemMeasures = stats?.problem_measures?.slice(0, 3).map(m => m.measure) || [];
-                aiAssessment.textContent = `You had ${stats?.pitch_deviation_count || 0} pitch deviations and ${stats?.rhythm_deviation_count || 0} timing issues. Focus on measures ${problemMeasures.join(', ') || '1-3'} to improve.`;
-
-                if (loopMeasuresEl && problemMeasures.length > 0) {
-                    loopMeasuresEl.innerHTML = problemMeasures
-                        .map(m => `<span class="loop-measure">M${m}</span>`)
-                        .join('');
-                }
-
-                if (practiceLoopSection) practiceLoopSection.style.display = 'block';
-            }
-        }
-
-        // Setup practice loop button
-        document.getElementById('start-loop-btn')?.addEventListener('click', () => {
-            this.startPracticeLoop();
-        });
 
         // Show modal
         modal.classList.add('active');
     }
 
     /**
-     * Start the practice loop for problematic measures
+     * Add recommendation based on weakest performance axis
      */
-    startPracticeLoop() {
-        if (this.practiceLoopController) {
-            this.practiceLoopController.start();
+    addRecommendation(weakestAxis) {
+        const recommendations = {
+            pitch: 'Focus on pitch accuracy: Use a tuner to train your ear for correct intonation. Pay attention to finger placement.',
+            rhythm: 'Work on timing: Practice with a metronome at slower tempos. Focus on maintaining steady beat throughout.',
+            intonation: 'Improve note transitions: Practice scales and arpeggios slowly, focusing on smooth connections between notes.'
+        };
 
-            // Adjust metronome tempo
-            const suggestedTempo = this.practiceLoopController.getRecommendedTempo();
-            this.metronome.setBPM(suggestedTempo);
-
-            // Update UI
-            const tempoSlider = document.getElementById('tempo-slider');
-            const bpmDisplay = document.getElementById('bpm-display');
-            if (tempoSlider) tempoSlider.value = suggestedTempo;
-            if (bpmDisplay) bpmDisplay.textContent = suggestedTempo;
-
-            // Close modal
-            document.getElementById('session-summary-modal')?.classList.remove('active');
-
-            this.showToast(`Practice loop started at ${suggestedTempo} BPM`, 'info');
-
-            // Start practice
-            this.startPractice();
+        const recommendationEl = document.getElementById('session-recommendation');
+        if (recommendationEl) {
+            recommendationEl.textContent = recommendations[weakestAxis.name] || '';
+            recommendationEl.style.display = recommendationEl.textContent ? 'block' : 'none';
         }
+    }
+
+    /**
+     * Render radar chart for three-axis visualization
+     */
+    renderRadarChart(scores) {
+        const canvas = document.getElementById('radar-chart-canvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(centerX, centerY) - 20;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw background circles
+        ctx.strokeStyle = '#2a2a3a';
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= 4; i++) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * (i / 4), 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Draw axis lines and labels
+        const axes = [
+            { label: 'Pitch', value: scores.pitch, angle: -Math.PI / 2 },
+            { label: 'Rhythm', value: scores.rhythm, angle: Math.PI / 6 },
+            { label: 'Intonation', value: scores.transition, angle: Math.PI * 5 / 6 }
+        ];
+
+        ctx.strokeStyle = '#3a3a4a';
+        ctx.fillStyle = '#a0a0b0';
+        ctx.font = '12px Source Sans 3';
+        ctx.textAlign = 'center';
+
+        axes.forEach((axis) => {
+            const x = centerX + Math.cos(axis.angle) * radius;
+            const y = centerY + Math.sin(axis.angle) * radius;
+
+            // Draw axis line
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+            // Draw label
+            const labelX = centerX + Math.cos(axis.angle) * (radius + 15);
+            const labelY = centerY + Math.sin(axis.angle) * (radius + 15);
+            ctx.fillText(axis.label, labelX, labelY + 4);
+        });
+
+        // Draw data polygon
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.3)'; // emerald with opacity
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+
+        axes.forEach((axis, index) => {
+            const valueRadius = (axis.value / 100) * radius;
+            const x = centerX + Math.cos(axis.angle) * valueRadius;
+            const y = centerY + Math.sin(axis.angle) * valueRadius;
+
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw data points
+        axes.forEach((axis) => {
+            const valueRadius = (axis.value / 100) * radius;
+            const x = centerX + Math.cos(axis.angle) * valueRadius;
+            const y = centerY + Math.sin(axis.angle) * valueRadius;
+
+            ctx.beginPath();
+            ctx.fillStyle = IntonationAnalyzer.getScoreColor(axis.value);
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+        });
     }
 
     searchIMSLP() {

@@ -1,13 +1,23 @@
 const express = require('express');
 const helmet = require('helmet');
+const multer = require('multer');
 const config = require('./config');
 const logger = require('./middleware/logger');
 const cors = require('./middleware/cors');
 const rateLimiter = require('./middleware/rateLimiter');
 const healthRoutes = require('./routes/health');
-const aiRoutes = require('./routes/ai');
+const imslpRoutes = require('./routes/imslp');
+const omrRoutes = require('./routes/omr');
 
 const app = express();
+
+// Configure multer for file uploads
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB
+    }
+});
 
 // Security headers with CSP
 app.use(helmet({
@@ -46,8 +56,11 @@ app.use(express.static('.', { index: 'index.html' }));
 // Health check routes
 app.use('/health', healthRoutes);
 
-// AI routes (GPT-4o-mini integration)
-app.use('/api', aiRoutes);
+// IMSLP proxy routes
+app.use('/api/imslp', imslpRoutes);
+
+// OMR (Optical Music Recognition) routes
+app.use('/api/omr', upload.single('image'), omrRoutes);
 
 // API routes (placeholder for future routes)
 app.use('/api', (req, res) => {
@@ -57,6 +70,8 @@ app.use('/api', (req, res) => {
     endpoints: {
       health: '/health',
       healthDetailed: '/health/detailed',
+      imslpSearch: '/api/imslp/search',
+      imslpDownload: '/api/imslp/download/:id',
     },
   });
 });
