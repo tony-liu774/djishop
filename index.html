@@ -27,7 +27,6 @@
                 </a>
                 <div class="nav-links desktop-only">
                     <a href="#library" class="nav-link active">Library</a>
-                    <a href="#tuner" class="nav-link">Tuner</a>
                     <a href="#practice" class="nav-link">Practice</a>
                     <a href="#metronome" class="nav-link">Metronome</a>
                     <a href="#settings" class="nav-link">Settings</a>
@@ -48,14 +47,6 @@
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                 </svg>
                 <span>Library</span>
-            </a>
-            <a href="#tuner" class="mobile-nav-link">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <circle cx="12" cy="12" r="6"/>
-                    <circle cx="12" cy="12" r="2"/>
-                </svg>
-                <span>Tuner</span>
             </a>
             <a href="#practice" class="mobile-nav-link">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -134,46 +125,6 @@
                 </div>
             </section>
 
-            <!-- Tuner View -->
-            <section id="tuner-view" class="view">
-                <div class="tuner-header">
-                    <h1>Precision Tuner</h1>
-                    <p class="subtitle">Tune your instrument with precision</p>
-                </div>
-
-                <div class="tuner-instrument-select">
-                    <button class="tuner-instrument-btn active" data-instrument="violin">Violin</button>
-                    <button class="tuner-instrument-btn" data-instrument="viola">Viola</button>
-                    <button class="tuner-instrument-btn" data-instrument="cello">Cello</button>
-                    <button class="tuner-instrument-btn" data-instrument="bass">Bass</button>
-                </div>
-
-                <div class="tuner-gauge-container">
-                    <div id="tuner-gauge" class="tuner-gauge"></div>
-                </div>
-
-                <div class="tuner-strings" id="tuner-strings">
-                    <!-- String frequencies will be populated here -->
-                </div>
-
-                <div class="tuner-controls">
-                    <button class="tuner-toggle" id="tuner-toggle">
-                        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                            <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                        <span>Start Tuner</span>
-                    </button>
-                </div>
-
-                <div class="tuner-reference">
-                    <label for="reference-freq">Reference A4:</label>
-                    <input type="number" id="reference-freq" value="440" min="430" max="450" step="0.1">
-                    <span>Hz</span>
-                </div>
-            </section>
-
             <!-- Practice View -->
             <section id="practice-view" class="view">
                 <div class="practice-header">
@@ -182,13 +133,7 @@
                         <span class="instrument-badge" id="current-instrument">Violin</span>
                     </div>
                     <div class="practice-controls">
-                        <button class="btn btn-icon btn-secondary" id="practice-metronome-btn" title="Toggle Metronome">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2v6l4 2"/>
-                                <circle cx="12" cy="14" r="8"/>
-                            </svg>
-                        </button>
-                        <button class="btn btn-icon" id="start-practice-btn">
+                        <button class="btn btn-icon" id="start-practice-btn" disabled>
                             <svg viewBox="0 0 24 24" fill="currentColor">
                                 <polygon points="5 3 19 12 5 21 5 3"/>
                             </svg>
@@ -197,7 +142,28 @@
                 </div>
 
                 <div class="sheet-music-container" id="sheet-music-container">
-                    <div class="sheet-music-placeholder">
+                    <div class="zoom-controls" id="zoom-controls">
+                        <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </button>
+                        <span class="zoom-level" id="zoom-level">100%</span>
+                        <button class="zoom-btn" id="zoom-in-btn" title="Zoom In">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </button>
+                        <button class="zoom-btn" id="zoom-reset-btn" title="Reset Zoom">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                <path d="M3 3v5h5"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="sheet-music-wrapper" id="sheet-music-wrapper">
+                        <div class="sheet-music-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
@@ -206,6 +172,7 @@
                             <polyline points="10 9 9 9 8 9"/>
                         </svg>
                         <p>Select a piece from your library to start practicing</p>
+                    </div>
                     </div>
                 </div>
 
@@ -225,16 +192,7 @@
                         </div>
                         <div class="timing-indicator">
                             <span class="indicator-label">Timing</span>
-                            <div class="timing-meter" id="timing-meter">
-                                <div class="timing-center"></div>
-                                <div class="timing-marker" id="timing-marker"></div>
-                            </div>
-                            <div class="timing-labels">
-                                <span class="timing-early">Early</span>
-                                <span class="timing-late">Late</span>
-                            </div>
                             <span class="timing-display" id="timing-display">0ms</span>
-                            <span class="timing-status" id="timing-status"></span>
                         </div>
                     </div>
                     <div class="score-display">
@@ -414,7 +372,7 @@
                         </div>
                     </label>
                     <label class="import-option">
-                        <input type="file" id="scan-file-input" accept="image/*" capture="environment" hidden>
+                        <input type="file" accept="image/*" capture="environment" hidden>
                         <div class="import-option-content">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -426,6 +384,73 @@
                         </div>
                     </label>
                 </div>
+            </div>
+        </div>
+
+        <!-- Upload Modal with Metadata -->
+        <div class="modal" id="upload-modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <button class="modal-close" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+                <h2>Add to Library</h2>
+                <form id="upload-form" class="upload-form">
+                    <div class="form-group">
+                        <label for="score-title">Title *</label>
+                        <input type="text" id="score-title" required placeholder="e.g., Bach - Cello Suite No. 1">
+                    </div>
+                    <div class="form-group">
+                        <label for="score-composer">Composer *</label>
+                        <input type="text" id="score-composer" required placeholder="e.g., J.S. Bach">
+                    </div>
+                    <div class="form-group">
+                        <label for="score-instrument">Instrument</label>
+                        <select id="score-instrument">
+                            <option value="violin">Violin</option>
+                            <option value="viola">Viola</option>
+                            <option value="cello">Cello</option>
+                            <option value="bass">Double Bass</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Difficulty</label>
+                        <div class="difficulty-rating" id="difficulty-rating">
+                            <button type="button" class="star-btn" data-rating="1">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn" data-rating="2">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn" data-rating="3">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn" data-rating="4">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn" data-rating="5">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                        </div>
+                        <input type="hidden" id="score-difficulty" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="score-tags">Tags (comma separated)</label>
+                        <input type="text" id="score-tags" placeholder="e.g., baroque, beginner, scales">
+                    </div>
+                    <div class="form-group">
+                        <label for="score-file">File *</label>
+                        <input type="file" id="score-file" accept=".musicxml,.xml,.mei,.pdf" required>
+                        <small>MusicXML, MEI, or PDF</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-upload-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add to Library</button>
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -482,9 +507,6 @@
                             <span class="breakdown-value" id="session-duration">5:32</span>
                         </div>
                     </div>
-                    <div class="timing-analysis" id="timing-analysis">
-                        <!-- Timing analysis message will appear here -->
-                    </div>
                     <div class="heatmap-section">
                         <h3>Practice Areas</h3>
                         <p class="heatmap-note">Measures colored red need the most practice</p>
@@ -500,33 +522,6 @@
             </div>
         </div>
 
-        <!-- Measure Detail Modal -->
-        <div class="modal" id="measure-detail-modal">
-            <div class="modal-backdrop"></div>
-            <div class="modal-content">
-                <button class="modal-close" aria-label="Close">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
-                <div class="measure-detail">
-                    <h2>Measure <span id="detail-measure-number">1</span></h2>
-                    <div class="detail-score">
-                        <span class="detail-accuracy" id="detail-measure-score">85%</span>
-                        <span class="detail-label">Accuracy</span>
-                    </div>
-                    <div class="note-breakdown" id="note-breakdown">
-                        <!-- Note details will be inserted here -->
-                    </div>
-                    <div class="detail-actions">
-                        <button class="btn btn-primary" id="close-detail-btn">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
 
@@ -535,17 +530,18 @@
     <script src="src/js/parsers/musicxml-parser.js"></script>
     <script src="src/js/audio/audio-engine.js"></script>
     <script src="src/js/audio/pitch-detector.js"></script>
-    <script src="src/js/audio/precision-tuner.js"></script>
     <script src="src/js/audio/instrument-detector.js"></script>
     <script src="src/js/audio/metronome.js"></script>
     <script src="src/js/analysis/performance-comparator.js"></script>
     <script src="src/js/components/sheet-music-renderer.js"></script>
-    <script src="src/js/components/tuner-gauge.js"></script>
     <script src="src/js/components/heat-map-renderer.js"></script>
     <script src="src/js/components/follow-the-ball.js"></script>
+    <script src="src/js/components/zoom-controller.js"></script>
     <script src="src/js/services/performance-history.js"></script>
     <script src="src/js/services/imslp-client.js"></script>
+    <script src="src/js/services/library-service.js"></script>
     <script src="src/js/services/omr-client.js"></script>
+    <script src="src/js/services/performance-history.js"></script>
     <script src="src/js/metrics/accuracy-scorer.js"></script>
     <script src="src/js/metrics/rhythm-analyzer.js"></script>
     <script src="src/js/utils/animations.js"></script>
