@@ -299,6 +299,175 @@
             </section>
         </main>
 
+        <!-- Onboarding Modal -->
+        <div class="modal" id="onboarding-modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content modal-large onboarding-content">
+                <!-- Welcome Step -->
+                <div class="onboarding-step" id="onboarding-step-welcome">
+                    <div class="onboarding-header">
+                        <div class="onboarding-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M9 18V5l12-2v13"/>
+                                <circle cx="6" cy="18" r="3"/>
+                                <circle cx="18" cy="16" r="3"/>
+                            </svg>
+                        </div>
+                        <h2>Welcome to Virtual Concertmaster</h2>
+                        <p class="onboarding-subtitle">Your personal AI-powered practice companion</p>
+                    </div>
+                    <div class="onboarding-features">
+                        <div class="feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                            <span>Real-time pitch detection</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2a10 10 0 1 0 10 10"/>
+                                <path d="M12 2v10l4 4"/>
+                            </svg>
+                            <span>AI-powered feedback</span>
+                        </div>
+                        <div class="feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M3 9h18"/>
+                            </svg>
+                            <span>Smart practice loops</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-large" id="onboarding-start-btn">Get Started</button>
+                </div>
+
+                <!-- Permissions Step -->
+                <div class="onboarding-step" id="onboarding-step-permissions" style="display: none;">
+                    <div class="onboarding-header">
+                        <div class="onboarding-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                            </svg>
+                        </div>
+                        <h2>Microphone Access</h2>
+                        <p class="onboarding-subtitle">We need access to listen to your instrument</p>
+                    </div>
+                    <div class="permissions-info">
+                        <p>To analyze your playing in real-time, we need permission to use your device's microphone. Your audio is processed locally and never stored or uploaded.</p>
+                    </div>
+                    <button class="btn btn-primary btn-large" id="request-mic-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        </svg>
+                        Enable Microphone
+                    </button>
+                    <button class="btn btn-ghost" id="skip-permissions-btn">Skip for now</button>
+                </div>
+
+                <!-- Instrument Step -->
+                <div class="onboarding-step" id="onboarding-step-instrument" style="display: none;">
+                    <div class="onboarding-header">
+                        <div class="onboarding-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2v20M8 6c2-2 6-2 8 0M6 10c3-2 9-2 12 0M8 16c2-2 6-2 8 0"/>
+                            </svg>
+                        </div>
+                        <h2>Select Your Instrument</h2>
+                        <p class="onboarding-subtitle">Calibrate the pitch detection for your instrument</p>
+                    </div>
+                    <div class="instrument-selector-large" id="instrument-selector">
+                        <button class="instrument-option-large active" data-instrument="violin">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2v20M8 6c2-2 6-2 8 0M6 10c3-2 9-2 12 0M8 16c2-2 6-2 8 0M10 22c1-2 5-2 4 0"/>
+                            </svg>
+                            <span class="instrument-name">Violin</span>
+                            <span class="instrument-range">G3 - E7</span>
+                        </button>
+                        <button class="instrument-option-large" data-instrument="viola">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2v20M8 5c2-1.5 5-1.5 8 0M6 9c2.5-1.5 5.5-1.5 12 0M8 15c2-1.5 5-1.5 8 0"/>
+                            </svg>
+                            <span class="instrument-name">Viola</span>
+                            <span class="instrument-range">C3 - A6</span>
+                        </button>
+                        <button class="instrument-option-large" data-instrument="cello">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2v20M7 4c2.5-1 6-1 10 0M5 8c3-1.5 8-1.5 14 0M7 14c2-1.5 6-1.5 10 0"/>
+                            </svg>
+                            <span class="instrument-name">Cello</span>
+                            <span class="instrument-range">C2 - B5</span>
+                        </button>
+                        <button class="instrument-option-large" data-instrument="bass">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2v20M8 6c2-1 5-1 8 0M6 12c2-1.5 5-1.5 12 0"/>
+                            </svg>
+                            <span class="instrument-name">Double Bass</span>
+                            <span class="instrument-range">E1 - C4</span>
+                        </button>
+                    </div>
+                    <button class="btn btn-primary btn-large" id="confirm-instrument-btn">Continue</button>
+                </div>
+
+                <!-- Calibration Step -->
+                <div class="onboarding-step" id="onboarding-step-calibration" style="display: none;">
+                    <div class="onboarding-header">
+                        <div class="onboarding-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 6v6l4 2"/>
+                            </svg>
+                        </div>
+                        <h2>Calibrating...</h2>
+                        <p class="onboarding-subtitle">Setting up frequency detection for your instrument</p>
+                    </div>
+                    <div class="calibration-animation">
+                        <div class="calibration-wave"></div>
+                        <div class="calibration-wave delay-1"></div>
+                        <div class="calibration-wave delay-2"></div>
+                    </div>
+                    <button class="btn btn-primary btn-large" id="calibration-complete-btn">Ready!</button>
+                </div>
+
+                <!-- Complete Step -->
+                <div class="onboarding-step" id="onboarding-step-complete" style="display: none;">
+                    <div class="onboarding-header">
+                        <div class="onboarding-icon success">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <h2>You're All Set!</h2>
+                        <p class="onboarding-subtitle">Ready to start your practice journey</p>
+                    </div>
+                    <div class="onboarding-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Instrument</span>
+                            <span class="summary-value" id="summary-instrument">Violin</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Frequency Range</span>
+                            <span class="summary-value" id="summary-range">G3 - E7</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-large" id="onboarding-finish-btn">Start Practicing</button>
+                </div>
+
+                <!-- Progress Indicator -->
+                <div class="onboarding-progress">
+                    <div class="progress-dot active" data-step="welcome"></div>
+                    <div class="progress-dot" data-step="permissions"></div>
+                    <div class="progress-dot" data-step="instrument"></div>
+                    <div class="progress-dot" data-step="calibration"></div>
+                    <div class="progress-dot" data-step="complete"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Import Modal -->
         <div class="modal" id="import-modal">
             <div class="modal-backdrop"></div>
@@ -476,6 +645,7 @@
     <script src="src/js/analysis/session-logger.js"></script>
     <script src="src/js/analysis/ai-summary-generator.js"></script>
     <script src="src/js/services/llm-service.js"></script>
+    <script src="src/js/services/onboarding-service.js"></script>
     <script src="src/js/components/sheet-music-renderer.js"></script>
     <script src="src/js/components/heat-map-renderer.js"></script>
     <script src="src/js/components/practice-loop.js"></script>

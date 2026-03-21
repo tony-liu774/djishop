@@ -27,6 +27,9 @@ class ConcertmasterApp {
         this.aiSummaryGenerator = null;
         this.practiceLoopController = null;
 
+        // Onboarding service
+        this.onboardingService = null;
+
         // UI Components
         this.sheetMusicRenderer = null;
         this.heatMapRenderer = null;
@@ -53,6 +56,7 @@ class ConcertmasterApp {
             this.setupPracticeControls();
             this.setupMetronome();
             this.setupSettings();
+            this.setupOnboarding();
 
             // Initialize audio engine
             await this.initializeAudio();
@@ -79,6 +83,17 @@ class ConcertmasterApp {
         // Create AI Summary modules
         this.aiSummaryGenerator = new AISummaryGenerator();
         this.practiceLoopController = new PracticeLoopController();
+
+        // Create onboarding service
+        this.onboardingService = new OnboardingService();
+        this.onboardingService.setOnComplete((data) => {
+            // Apply instrument settings after onboarding
+            if (data && data.instrument) {
+                this.selectedInstrument = data.instrument;
+                this.updateInstrumentSettings();
+                console.log('Onboarding complete with instrument:', data.instrument);
+            }
+        });
 
         // Setup practice loop callbacks
         this.practiceLoopController.setOnLoopChange((state) => {
@@ -371,6 +386,106 @@ class ConcertmasterApp {
             this.pitchDetector.confidenceThreshold = value;
             if (sensitivityValue) sensitivityValue.textContent = value.toFixed(2);
         });
+    }
+
+    setupOnboarding() {
+        // Check if onboarding should be shown
+        if (!this.onboardingService || this.onboardingService.hasCompletedOnboarding) {
+            return;
+        }
+
+        // Show onboarding modal
+        const modal = document.getElementById('onboarding-modal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+
+        // Setup step navigation
+        const showStep = (stepName) => {
+            document.querySelectorAll('.onboarding-step').forEach(step => {
+                step.style.display = 'none';
+            });
+            const targetStep = document.getElementById(`onboarding-step-${stepName}`);
+            if (targetStep) {
+                targetStep.style.display = 'flex';
+            }
+            // Update progress dots
+            document.querySelectorAll('.progress-dot').forEach(dot => {
+                dot.classList.remove('active');
+                if (dot.dataset.step === stepName) {
+                    dot.classList.add('active');
+                }
+            });
+        };
+
+        // Welcome step
+        document.getElementById('onboarding-start-btn')?.addEventListener('click', () => {
+            this.onboardingService.nextStep();
+            showStep('permissions');
+        });
+
+        // Permissions step
+        document.getElementById('request-mic-btn')?.addEventListener('click', async () => {
+            const granted = await this.onboardingService.requestMicrophonePermission();
+            if (granted) {
+                this.onboardingService.nextStep();
+                showStep('instrument');
+            } else {
+                this.showToast('Microphone access is needed for practice', 'error');
+            }
+        });
+
+        document.getElementById('skip-permissions-btn')?.addEventListener('click', () => {
+            this.onboardingService.nextStep();
+            showStep('instrument');
+        });
+
+        // Instrument selection
+        document.querySelectorAll('.instrument-option-large').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.instrument-option-large').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        document.getElementById('confirm-instrument-btn')?.addEventListener('click', () => {
+            const selectedBtn = document.querySelector('.instrument-option-large.active');
+            if (selectedBtn) {
+                const instrument = selectedBtn.dataset.instrument;
+                this.onboardingService.selectInstrument(instrument);
+
+                // Update summary
+                const range = this.onboardingService.getSelectedInstrumentRange();
+                if (range) {
+                    document.getElementById('summary-instrument').textContent = range.name;
+                    document.getElementById('summary-range').textContent = `${Math.round(range.minFreq)} - ${Math.round(range.maxFreq)} Hz`;
+                }
+
+                this.onboardingService.nextStep();
+                showStep('calibration');
+
+                // Auto-advance after calibration animation
+                setTimeout(() => {
+                    this.onboardingService.nextStep();
+                    showStep('complete');
+                }, 2000);
+            }
+        });
+
+        document.getElementById('calibration-complete-btn')?.addEventListener('click', () => {
+            this.onboardingService.nextStep();
+            showStep('complete');
+        });
+
+        // Finish onboarding
+        document.getElementById('onboarding-finish-btn')?.addEventListener('click', () => {
+            this.onboardingService.finishOnboarding();
+            modal?.classList.remove('active');
+            this.showToast('Welcome to Virtual Concertmaster!', 'success');
+        });
+
+        // Start at welcome step
+        showStep('welcome');
     }
 
     updateInstrumentSettings() {
@@ -793,26 +908,31 @@ class ConcertmasterApp {
         if (aiSummary && aiSummary.ai) {
             const ai = aiSummary.ai;
 
-            // Display overall assessment
+            // Display overall assessment (The Praise)
             if (aiAssessment) {
+                // New format: overall_assessment is The Praise paragraph
                 aiAssessment.textContent = ai.overall_assessment || 'Great practice session!';
             }
 
-            // Display strengths
-            if (aiStrengths && ai.strengths) {
+            // Display diagnosis and fix (The Diagnosis + The Fix)
+            if (aiStrengths) {
+                // Use strengths section to show diagnosis
+                const diagnosis = ai.diagnosis || '';
+                const fix = ai.fix || ai.specific_guidance || '';
+
                 aiStrengths.innerHTML = `
-                    <h4>Strengths</h4>
-                    <ul>
-                        ${ai.strengths.map(s => `<li>${s}</li>`).join('')}
-                    </ul>
+                    <h4>The Diagnosis</h4>
+                    <p>${diagnosis}</p>
+                    <h4>The Fix</h4>
+                    <p>${fix}</p>
                 `;
             }
 
-            // Display guidance
+            // Display guidance (kept for backward compatibility)
             if (aiGuidance) {
                 aiGuidance.innerHTML = `
-                    <h4>Focus Areas</h4>
-                    <p>${ai.specific_guidance || ''}</p>
+                    <h4>Practice Focus</h4>
+                    <p>${ai.fix || ai.specific_guidance || ''}</p>
                 `;
             }
 
