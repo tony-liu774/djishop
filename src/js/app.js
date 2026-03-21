@@ -10,6 +10,7 @@ class ConcertmasterApp {
         this.pitchDetector = null;
         this.metronome = null;
         this.scoreLibrary = null;
+        this.libraryService = null;
         this.performanceComparator = null;
         this.rhythmAnalyzer = null;
         this.currentScore = null;
@@ -26,6 +27,7 @@ class ConcertmasterApp {
         // UI Components
         this.sheetMusicRenderer = null;
         this.heatMapRenderer = null;
+        this.zoomController = null;
 
         // DOM Elements
         this.views = {};
@@ -68,6 +70,7 @@ class ConcertmasterApp {
         this.pitchDetector = new PitchDetector();
         this.metronome = new Metronome();
         this.scoreLibrary = new ScoreLibrary();
+        this.libraryService = window.libraryService;
         this.performanceComparator = new PerformanceComparator();
         this.rhythmAnalyzer = new RhythmAnalyzer();
         this.accuracyScorer = new AccuracyScorer();
@@ -84,6 +87,9 @@ class ConcertmasterApp {
 
         // Initialize renderers
         this.initRenderers();
+
+        // Initialize zoom controller
+        this.initZoomControls();
     }
 
     initRenderers() {
@@ -99,6 +105,14 @@ class ConcertmasterApp {
         if (heatmapPreview) {
             this.heatMapRenderer = new HeatMapRenderer(heatmapPreview);
             this.heatMapRenderer.init();
+        }
+    }
+
+    initZoomControls() {
+        const sheetWrapper = document.getElementById('sheet-music-wrapper');
+        if (sheetWrapper) {
+            this.zoomController = new ZoomController(sheetWrapper);
+            this.zoomController.init();
         }
     }
 
@@ -183,8 +197,11 @@ class ConcertmasterApp {
         });
 
         document.getElementById('scan-music-btn')?.addEventListener('click', () => {
-            this.showToast('Scan feature coming soon', 'info');
+            this.openScanModal();
         });
+
+        // Setup upload modal handlers
+        this.setupUploadModal();
 
         document.getElementById('search-imslp-btn')?.addEventListener('click', () => {
             document.getElementById('imslp-modal')?.classList.add('active');
@@ -215,21 +232,6 @@ class ConcertmasterApp {
         // Start practice button
         document.getElementById('start-practice-btn')?.addEventListener('click', () => {
             this.togglePractice();
-        });
-
-        // Practice metronome toggle
-        document.getElementById('practice-metronome-btn')?.addEventListener('click', async () => {
-            if (!this.metronome.audioContext) {
-                await this.metronome.init();
-            }
-            this.metronome.toggle();
-
-            const btn = document.getElementById('practice-metronome-btn');
-            btn.classList.toggle('active', this.metronome.isPlaying);
-
-            if (this.metronome.isPlaying) {
-                this.showToast('Metronome started', 'info');
-            }
         });
     }
 
@@ -564,27 +566,12 @@ class ConcertmasterApp {
         }
 
         this.isPracticing = true;
-
-        // Initialize rhythm analyzer with score tempo
-        const tempo = this.currentScore.tempo || 120;
-        this.rhythmAnalyzer.setTempo(tempo);
-
-        // Calculate expected note intervals based on score time signature
-        const expectedIntervals = this.calculateExpectedIntervals();
-        this.rhythmAnalyzer.setExpectedIntervals(expectedIntervals);
-
-        // Track note timings
-        this.lastNoteTime = null;
-        this.beatStartTime = Date.now();
-        this.currentBeatCount = 0;
-
         this.sessionData = {
             scoreId: this.currentScore.id,
             startTime: Date.now(),
             notes: [],
             pitchAccuracy: [],
-            timingAccuracy: [],
-            timingDeviations: []
+            timingAccuracy: []
         };
 
         // Update UI
@@ -601,32 +588,7 @@ class ConcertmasterApp {
             this.processAudio(data);
         }, 50);
 
-        // Start metronome if it's enabled
-        if (this.metronome.isPlaying) {
-            this.showToast('Practice started with metronome', 'success');
-        } else {
-            this.showToast('Practice started - play your instrument', 'success');
-        }
-    }
-
-    calculateExpectedIntervals() {
-        // Estimate expected intervals between notes based on tempo
-        // This is a simplified version - in production, parse actual note durations from MusicXML
-        const msPerBeat = 60000 / this.rhythmAnalyzer.tempo;
-        const intervals = [];
-
-        if (!this.currentScore) return intervals;
-
-        // Get all notes from the score
-        const allNotes = this.currentScore.getAllNotes ? this.currentScore.getAllNotes() : [];
-
-        // Estimate intervals based on typical note values
-        // Default to quarter note intervals
-        for (let i = 0; i < allNotes.length; i++) {
-            intervals.push(msPerBeat);
-        }
-
-        return intervals;
+        this.showToast('Practice started - play your instrument', 'success');
     }
 
     stopPractice() {
@@ -665,43 +627,6 @@ class ConcertmasterApp {
         const result = this.pitchDetector.process(data.timeData);
 
         if (result) {
-            // Calculate timing deviation if we have previous note time
-            const currentTime = Date.now();
-            let timingDeviation = 0;
-            let timingStatus = 'on-time';
-
-            if (this.lastNoteTime) {
-                const interval = currentTime - this.lastNoteTime;
-                const expectedInterval = this.rhythmAnalyzer.expectedIntervals[0] || (60000 / this.rhythmAnalyzer.tempo);
-                timingDeviation = interval - expectedInterval;
-
-                // Determine if early, late, or on time
-                // Threshold: within 100ms is "on time"
-                if (timingDeviation < -100) {
-                    timingStatus = 'early';
-                } else if (timingDeviation > 100) {
-                    timingStatus = 'late';
-                } else {
-                    timingStatus = 'on-time';
-                }
-
-                // Calculate timing accuracy (0-100)
-                const timingAccuracy = Math.max(0, 100 - Math.abs(timingDeviation) / expectedInterval * 100);
-
-                // Store timing data
-                if (this.sessionData) {
-                    this.sessionData.timingAccuracy.push(timingAccuracy);
-                    this.sessionData.timingDeviations.push(timingDeviation);
-                }
-
-                // Add timing info to result for display
-                result.timingDeviation = timingDeviation;
-                result.timingStatus = timingStatus;
-                result.timingAccuracy = timingAccuracy;
-            }
-
-            this.lastNoteTime = currentTime;
-
             // Compare against sheet music if score is loaded
             if (this.currentScore && this.performanceComparator) {
                 const comparison = this.performanceComparator.compare(result);
@@ -734,9 +659,7 @@ class ConcertmasterApp {
                                 timestamp: Date.now(),
                                 measure: measure,
                                 accuracy: accuracy,
-                                matched: comparison.matched,
-                                timingDeviation: timingDeviation,
-                                timingStatus: timingStatus
+                                matched: comparison.matched
                             });
                         }
                     }
@@ -762,8 +685,6 @@ class ConcertmasterApp {
         const pitchMarker = document.getElementById('pitch-marker');
         const centsDisplay = document.getElementById('cents-display');
         const timingDisplay = document.getElementById('timing-display');
-        const timingMarker = document.getElementById('timing-marker');
-        const timingStatus = document.getElementById('timing-status');
 
         if (noteDisplay) {
             noteDisplay.textContent = noteInfo.name;
@@ -795,41 +716,9 @@ class ConcertmasterApp {
             }
         }
 
-        // Update timing display
+        // Update timing (placeholder)
         if (timingDisplay) {
-            const deviation = noteInfo.timingDeviation || 0;
-            const sign = deviation > 0 ? '+' : '';
-            timingDisplay.textContent = sign + Math.round(deviation) + 'ms';
-        }
-
-        // Update timing marker position and color
-        if (timingMarker) {
-            const deviation = noteInfo.timingDeviation || 0;
-            // Map deviation to 0-100% range (-200ms to +200ms)
-            const maxDeviation = 200;
-            const percent = Math.max(-maxDeviation, Math.min(maxDeviation, deviation)) + maxDeviation;
-            timingMarker.style.left = (percent / (maxDeviation * 2) * 100) + '%';
-
-            // Remove previous classes
-            timingMarker.classList.remove('early', 'late', 'on-time');
-
-            // Add appropriate class based on timing status
-            const status = noteInfo.timingStatus || 'on-time';
-            timingMarker.classList.add(status);
-        }
-
-        // Update timing status indicator
-        if (timingStatus) {
-            const status = noteInfo.timingStatus || 'on-time';
-            timingStatus.className = 'timing-status ' + status;
-
-            if (status === 'early') {
-                timingStatus.textContent = 'Early';
-            } else if (status === 'late') {
-                timingStatus.textContent = 'Late';
-            } else {
-                timingStatus.textContent = 'On Time';
-            }
+            timingDisplay.textContent = '0ms';
         }
     }
 
@@ -846,13 +735,6 @@ class ConcertmasterApp {
         const minutes = Math.floor(duration / 60000);
         const seconds = Math.floor((duration % 60000) / 1000);
         document.getElementById('session-duration').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-        // Add timing analysis message if available
-        const timingAnalysisEl = document.getElementById('timing-analysis');
-        if (timingAnalysisEl && score.timingAnalysis) {
-            timingAnalysisEl.textContent = score.timingAnalysis.message;
-            timingAnalysisEl.className = 'timing-analysis ' + score.timingAnalysis.status;
-        }
 
         // Update heat map with session data
         if (this.heatMapRenderer && this.sessionData) {
@@ -913,6 +795,258 @@ class ConcertmasterApp {
         setTimeout(() => {
             toast.remove();
         }, 3000);
+    }
+
+    // ==================== SCAN MUSIC ====================
+    openScanModal() {
+        // Create a file input for camera/camera capture
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'environment';
+
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            this.showToast('Processing scanned image...', 'info');
+
+            try {
+                // Process with OMR client
+                const score = await window.omrClient.processImage(file);
+                score.title = file.name.replace(/\.[^/.]+$/, '');
+
+                // Add to library
+                await this.scoreLibrary.addScore(score);
+                this.renderLibrary();
+                this.showToast('Score added to library', 'success');
+            } catch (error) {
+                console.error('Scan error:', error);
+                this.showToast('Failed to process scan: ' + error.message, 'error');
+            }
+        };
+
+        input.click();
+    }
+
+    // ==================== UPLOAD MODAL ====================
+    setupUploadModal() {
+        const modal = document.getElementById('upload-modal');
+        const form = document.getElementById('upload-form');
+        const cancelBtn = document.getElementById('cancel-upload-btn');
+        const closeBtn = modal?.querySelector('.modal-close');
+        const backdrop = modal?.querySelector('.modal-backdrop');
+
+        // Close handlers
+        cancelBtn?.addEventListener('click', () => modal?.classList.remove('active'));
+        closeBtn?.addEventListener('click', () => modal?.classList.remove('active'));
+        backdrop?.addEventListener('click', () => modal?.classList.remove('active'));
+
+        // Difficulty rating
+        const starBtns = document.querySelectorAll('.star-btn');
+        const difficultyInput = document.getElementById('score-difficulty');
+
+        starBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const rating = parseInt(btn.dataset.rating);
+                difficultyInput.value = rating;
+                starBtns.forEach(b => {
+                    b.classList.toggle('active', parseInt(b.dataset.rating) <= rating);
+                });
+            });
+        });
+
+        // Initialize with 3 stars selected
+        starBtns.forEach(b => {
+            if (parseInt(b.dataset.rating) <= 3) b.classList.add('active');
+        });
+
+        // Form submission
+        form?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('score-title').value;
+            const composer = document.getElementById('score-composer').value;
+            const instrument = document.getElementById('score-instrument').value;
+            const difficulty = parseInt(document.getElementById('score-difficulty').value);
+            const tagsInput = document.getElementById('score-tags').value;
+            const fileInput = document.getElementById('score-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                this.showToast('Please select a file', 'error');
+                return;
+            }
+
+            this.showToast('Processing file...', 'info');
+
+            try {
+                let score;
+                if (file.name.endsWith('.musicxml') || file.name.endsWith('.xml')) {
+                    const text = await file.text();
+                    const parser = new MusicXMLParser();
+                    score = parser.parse(text);
+                } else if (file.name.endsWith('.pdf')) {
+                    // Process PDF through OMR
+                    score = await window.omrClient.processImage(file);
+                } else {
+                    this.showToast('Unsupported file format', 'error');
+                    return;
+                }
+
+                // Set metadata
+                score.title = title;
+                score.composer = composer;
+                score.instrument = instrument;
+                score.difficulty = difficulty;
+                score.tags = tagsInput ? tagsInput.split(',').map(t => t.trim()) : [];
+
+                // Add to library
+                await this.scoreLibrary.addScore(score);
+                this.renderLibrary();
+
+                // Close modal and reset form
+                modal?.classList.remove('active');
+                form.reset();
+                starBtns.forEach(b => b.classList.remove('active'));
+
+                this.showToast('Score added to library', 'success');
+            } catch (error) {
+                console.error('Upload error:', error);
+                this.showToast('Failed to process file: ' + error.message, 'error');
+            }
+        });
+    }
+
+    // ==================== ENHANCED LIBRARY RENDERING ====================
+    renderLibrary() {
+        const grid = document.getElementById('library-grid');
+        if (!grid) return;
+
+        const scores = this.scoreLibrary.scores;
+
+        if (scores.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 18V5l12-2v13"/>
+                        <circle cx="6" cy="18" r="3"/>
+                        <circle cx="18" cy="16" r="3"/>
+                    </svg>
+                    <h3>No scores yet</h3>
+                    <p>Import sheet music to get started with practice</p>
+                </div>
+            `;
+            return;
+        }
+
+        grid.innerHTML = scores.map(score => {
+            // Generate difficulty stars
+            const difficulty = score.difficulty || 3;
+            const stars = Array(5).fill(0).map((_, i) =>
+                `<span class="star ${i < difficulty ? 'filled' : ''}">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </span>`
+            ).join('');
+
+            // Format last practiced
+            const lastPracticed = score.lastPracticed ?
+                this.formatDate(score.lastPracticed) : 'Never practiced';
+
+            return `
+                <div class="library-card" data-id="${score.id}">
+                    <div class="library-card-thumbnail ${score.thumbnail ? 'has-preview' : ''}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </div>
+                    <h3 class="library-card-title">${score.title}</h3>
+                    <p class="library-card-composer">${score.composer}</p>
+                    <div class="library-card-difficulty">${stars}</div>
+                    <div class="library-card-meta">
+                        <span class="instrument-badge">${score.instrument || 'Violin'}</span>
+                        <span class="library-card-last-practiced">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            ${lastPracticed}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add click handlers
+        grid.querySelectorAll('.library-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const id = card.dataset.id;
+                this.selectScore(id);
+            });
+        });
+    }
+
+    renderLibraryFiltered(scores) {
+        const grid = document.getElementById('library-grid');
+
+        if (scores.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <p>No scores match your search</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Use the same enhanced template as renderLibrary
+        grid.innerHTML = scores.map(score => {
+            const difficulty = score.difficulty || 3;
+            const stars = Array(5).fill(0).map((_, i) =>
+                `<span class="star ${i < difficulty ? 'filled' : ''}">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                </span>`
+            ).join('');
+
+            const lastPracticed = score.lastPracticed ?
+                this.formatDate(score.lastPracticed) : 'Never practiced';
+
+            return `
+                <div class="library-card" data-id="${score.id}">
+                    <div class="library-card-thumbnail ${score.thumbnail ? 'has-preview' : ''}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </div>
+                    <h3 class="library-card-title">${score.title}</h3>
+                    <p class="library-card-composer">${score.composer}</p>
+                    <div class="library-card-difficulty">${stars}</div>
+                    <div class="library-card-meta">
+                        <span class="instrument-badge">${score.instrument || 'Violin'}</span>
+                        <span class="library-card-last-practiced">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            ${lastPracticed}
+                        </span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add click handlers
+        grid.querySelectorAll('.library-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const id = card.dataset.id;
+                this.selectScore(id);
+            });
+        });
     }
 }
 
