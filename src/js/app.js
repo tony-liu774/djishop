@@ -12,6 +12,7 @@ class ConcertmasterApp {
         this.scoreLibrary = null;
         this.performanceComparator = null;
         this.rhythmAnalyzer = null;
+        this.intonationAnalyzer = null;
         this.currentScore = null;
 
         // State
@@ -70,6 +71,7 @@ class ConcertmasterApp {
         this.scoreLibrary = new ScoreLibrary();
         this.performanceComparator = new PerformanceComparator();
         this.rhythmAnalyzer = new RhythmAnalyzer();
+        this.intonationAnalyzer = new IntonationAnalyzer();
         this.accuracyScorer = new AccuracyScorer();
 
         // Get DOM elements
@@ -557,6 +559,10 @@ class ConcertmasterApp {
             timingAccuracy: []
         };
 
+        // Reset analyzers for new session
+        this.rhythmAnalyzer.reset();
+        this.intonationAnalyzer.reset();
+
         // Update UI
         const startBtn = document.getElementById('start-practice-btn');
         startBtn.innerHTML = `
@@ -634,15 +640,28 @@ class ConcertmasterApp {
                         result.accuracy = accuracy;
                         result.matched = comparison.matched;
 
+                        // Record timing deviation in rhythm analyzer
+                        const now = Date.now();
+                        // Estimate expected time based on position and tempo (simplified)
+                        const tempo = this.metronome?.tempo || 120;
+                        const msPerBeat = 60000 / tempo;
+                        const expectedTime = now - msPerBeat; // Simplified - assumes on beat
+                        const deviation = now - expectedTime;
+                        this.rhythmAnalyzer.recordNoteOnset(now);
+                        this.intonationAnalyzer.recordTiming(expectedTime, now);
+                        this.intonationAnalyzer.recordTransition(result, now);
+
                         // Store in session data
                         if (this.sessionData) {
                             this.sessionData.pitchAccuracy.push(accuracy);
+                            this.sessionData.timingAccuracy.push(this.intonationAnalyzer.getRhythmScore());
                             this.sessionData.notes.push({
                                 note: result,
-                                timestamp: Date.now(),
+                                timestamp: now,
                                 measure: measure,
                                 accuracy: accuracy,
-                                matched: comparison.matched
+                                matched: comparison.matched,
+                                timingDeviation: deviation
                             });
                         }
                     }
@@ -676,10 +695,21 @@ class ConcertmasterApp {
             octaveDisplay.textContent = noteInfo.octave;
         }
 
-        // Calculate accuracy
-        const accuracy = this.accuracyScorer.calculatePitchAccuracy(noteInfo);
+        // Record pitch in intonation analyzer
+        const timestamp = Date.now();
+        this.intonationAnalyzer.recordPitch(noteInfo, timestamp);
+
+        // Calculate three-axis accuracy (pitch, rhythm, intonation)
+        const pitchAccuracy = this.accuracyScorer.calculatePitchAccuracy(noteInfo);
+        const rhythmScore = this.rhythmAnalyzer.calculateOverallTiming();
+        const intonationScore = this.intonationAnalyzer.getIntonationScore();
+
+        // Combined accuracy using three-axis
+        const accuracy = (pitchAccuracy * 0.4) + (rhythmScore * 0.4) + (intonationScore * 0.2);
+
         if (accuracyScore) {
-            accuracyScore.textContent = Math.round(accuracy) + '%';
+            // Smooth number transition
+            this.animateNumber(accuracyScore, accuracy);
         }
 
         // Update pitch meter (center is 0 cents)
@@ -689,7 +719,7 @@ class ConcertmasterApp {
             pitchMarker.style.left = percent + '%';
             centsDisplay.textContent = (cents > 0 ? '+' : '') + cents + '¢';
 
-            // Color based on accuracy
+            // Color based on accuracy (emerald for good, crimson for poor)
             if (Math.abs(cents) <= 10) {
                 pitchMarker.style.backgroundColor = 'var(--success)';
             } else if (Math.abs(cents) <= 25) {
@@ -699,25 +729,89 @@ class ConcertmasterApp {
             }
         }
 
-        // Update timing (placeholder)
+        // Update timing display with actual milliseconds from rhythm analyzer
         if (timingDisplay) {
-            timingDisplay.textContent = '0ms';
+            const latestDeviation = this.intonationAnalyzer.getLatestTimingDeviation();
+            if (latestDeviation !== null) {
+                const sign = latestDeviation > 0 ? '+' : '';
+                timingDisplay.textContent = sign + Math.round(latestDeviation) + 'ms';
+
+                // Color code: emerald for good timing, crimson for poor
+                if (Math.abs(latestDeviation) <= 30) {
+                    timingDisplay.style.color = 'var(--success)';
+                } else if (Math.abs(latestDeviation) <= 60) {
+                    timingDisplay.style.color = 'var(--warning)';
+                } else {
+                    timingDisplay.style.color = 'var(--error)';
+                }
+            } else {
+                timingDisplay.textContent = '0ms';
+                timingDisplay.style.color = '';
+            }
         }
+    }
+
+    // Helper method for smooth number transitions
+    animateNumber(element, targetValue) {
+        const currentValue = parseInt(element.textContent) || 0;
+        const duration = 200;
+        const startTime = performance.now();
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Ease out function
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            const currentValue = Math.round(currentValue + (targetValue - currentValue) * easeOut);
+
+            element.textContent = currentValue + '%';
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            }
+        };
+
+        requestAnimationFrame(animate);
     }
 
     showSessionSummary(score) {
         const modal = document.getElementById('session-summary-modal');
         if (!modal) return;
 
-        // Update summary data
-        document.getElementById('final-score').textContent = Math.round(score.overall) + '%';
-        document.getElementById('pitch-accuracy').textContent = Math.round(score.pitch) + '%';
-        document.getElementById('timing-accuracy').textContent = Math.round(score.timing) + '%';
+        // Get three-axis breakdown from intonation analyzer
+        const breakdown = this.intonationAnalyzer.getAxisBreakdown();
+        const recommendation = this.intonationAnalyzer.getWeakestAxisRecommendation();
+
+        // Update summary data with three-axis scores
+        document.getElementById('final-score').textContent = Math.round(breakdown.intonation.score) + '%';
+        document.getElementById('pitch-accuracy').textContent = Math.round(breakdown.pitch.score) + '%';
+        document.getElementById('timing-accuracy').textContent = Math.round(breakdown.rhythm.score) + '%';
+
+        // Update intonation accuracy display
+        const intonationEl = document.getElementById('intonation-accuracy');
+        if (intonationEl) {
+            intonationEl.textContent = Math.round(breakdown.intonation.score) + '%';
+        }
+
+        // Update color coding based on scores
+        this.updateScoreColor('pitch-accuracy', breakdown.pitch.score);
+        this.updateScoreColor('timing-accuracy', breakdown.rhythm.score);
+        this.updateScoreColor('intonation-accuracy', breakdown.intonation.score);
 
         const duration = this.sessionData?.startTime ? Date.now() - this.sessionData.startTime : 0;
         const minutes = Math.floor(duration / 60000);
         const seconds = Math.floor((duration % 60000) / 1000);
         document.getElementById('session-duration').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        // Add recommendation based on weakest axis
+        const recommendationEl = document.getElementById('axis-recommendation');
+        if (recommendationEl) {
+            recommendationEl.textContent = recommendation.recommendation;
+        }
+
+        // Render radar chart if available
+        this.renderRadarChart(breakdown);
 
         // Update heat map with session data
         if (this.heatMapRenderer && this.sessionData) {
@@ -727,6 +821,80 @@ class ConcertmasterApp {
 
         // Show modal
         modal.classList.add('active');
+    }
+
+    // Helper to update score colors (emerald for good, crimson for poor)
+    updateScoreColor(elementId, score) {
+        const el = document.getElementById(elementId);
+        if (el) {
+            if (score >= 80) {
+                el.style.color = 'var(--success)';
+            } else if (score >= 60) {
+                el.style.color = 'var(--warning)';
+            } else {
+                el.style.color = 'var(--error)';
+            }
+        }
+    }
+
+    // Render radar chart for three-axis visualization
+    renderRadarChart(breakdown) {
+        const container = document.getElementById('radar-chart-container');
+        if (!container) return;
+
+        const pitchScore = breakdown.pitch.score;
+        const rhythmScore = breakdown.rhythm.score;
+        const intonationScore = breakdown.intonation.score;
+
+        // Create SVG radar chart
+        const size = 150;
+        const center = size / 2;
+        const radius = 50;
+
+        // Calculate points for the three axes
+        const axes = [
+            { label: 'Pitch', value: pitchScore, angle: -Math.PI / 2 },
+            { label: 'Rhythm', value: rhythmScore, angle: Math.PI / 6 },
+            { label: 'Intonation', value: intonationScore, angle: Math.PI / 2 + Math.PI / 3 }
+        ];
+
+        const points = axes.map(axis => {
+            const rad = axis.angle;
+            const r = (axis.value / 100) * radius;
+            return {
+                x: center + r * Math.cos(rad),
+                y: center + r * Math.sin(rad)
+            };
+        });
+
+        const pathData = points.map((p, i) =>
+            (i === 0 ? 'M' : 'L') + p.x + ',' + p.y
+        ).join(' ') + ' Z';
+
+        container.innerHTML = `
+            <svg viewBox="0 0 ${size} ${size}" class="radar-chart">
+                <!-- Background circles -->
+                <circle cx="${center}" cy="${center}" r="${radius}" class="radar-circle"/>
+                <circle cx="${center}" cy="${center}" r="${radius * 0.66}" class="radar-circle"/>
+                <circle cx="${center}" cy="${center}" r="${radius * 0.33}" class="radar-circle"/>
+                <!-- Axis lines -->
+                ${axes.map(axis => {
+                    const rad = axis.angle;
+                    const x = center + radius * Math.cos(rad);
+                    const y = center + radius * Math.sin(rad);
+                    return `<line x1="${center}" y1="${center}" x2="${x}" y2="${y}" class="radar-axis"/>`;
+                }).join('')}
+                <!-- Data polygon -->
+                <path d="${pathData}" class="radar-polygon"/>
+                <!-- Labels -->
+                ${axes.map((axis, i) => {
+                    const rad = axis.angle;
+                    const x = center + (radius + 15) * Math.cos(rad);
+                    const y = center + (radius + 15) * Math.sin(rad);
+                    return `<text x="${x}" y="${y}" class="radar-label" text-anchor="middle" dominant-baseline="middle">${axis.label}</text>`;
+                }).join('')}
+            </svg>
+        `;
     }
 
     searchIMSLP() {
