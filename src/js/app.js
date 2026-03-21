@@ -23,6 +23,10 @@ class ConcertmasterApp {
         this.sessionData = null;
         this.accuracyScorer = null;
 
+        // Onboarding
+        this.onboardingService = null;
+        this.pendingPermissions = { microphone: false, camera: false };
+
         // UI Components
         this.sheetMusicRenderer = null;
         this.heatMapRenderer = null;
@@ -45,10 +49,14 @@ class ConcertmasterApp {
             // Setup UI
             this.setupNavigation();
             this.setupModals();
+            this.setupOnboarding();
             this.setupLibraryActions();
             this.setupPracticeControls();
             this.setupMetronome();
             this.setupSettings();
+
+            // Check for first run and show onboarding if needed
+            await this.checkOnboarding();
 
             // Initialize audio engine
             await this.initializeAudio();
@@ -72,6 +80,12 @@ class ConcertmasterApp {
         this.rhythmAnalyzer = new RhythmAnalyzer();
         this.accuracyScorer = new AccuracyScorer();
 
+        // Initialize onboarding service
+        this.onboardingService = new OnboardingService();
+
+        // Load saved preferences
+        this.loadPreferences();
+
         // Get DOM elements
         this.views = {
             library: document.getElementById('library-view'),
@@ -84,6 +98,18 @@ class ConcertmasterApp {
 
         // Initialize renderers
         this.initRenderers();
+    }
+
+    loadPreferences() {
+        const prefs = this.onboardingService.getPreferences();
+        this.selectedInstrument = prefs.instrument || 'violin';
+        this.confidenceThreshold = prefs.confidenceThreshold || 0.85;
+
+        // Apply instrument calibration to pitch detector
+        this.onboardingService.calibrateForInstrument(this.pitchDetector, this.selectedInstrument);
+
+        // Update UI with selected instrument
+        this.updateInstrumentSelector(this.selectedInstrument);
     }
 
     initRenderers() {
@@ -109,6 +135,195 @@ class ConcertmasterApp {
         };
 
         await this.audioEngine.init();
+    }
+
+    async checkOnboarding() {
+        // Show onboarding modal if first run
+        if (this.onboardingService.isFirstRun()) {
+            const modal = document.getElementById('onboarding-modal');
+            if (modal) {
+                modal.classList.add('active');
+            }
+        } else {
+            // Load saved permissions status
+            const permissions = this.onboardingService.getPermissions();
+            this.pendingPermissions = permissions;
+        }
+    }
+
+    setupOnboarding() {
+        // Get DOM elements
+        const modal = document.getElementById('onboarding-modal');
+        if (!modal) return;
+
+        // Get all onboarding steps
+        const steps = modal.querySelectorAll('.onboarding-step');
+
+        // Helper to show a specific step
+        const showStep = (stepName) => {
+            steps.forEach(step => {
+                step.classList.remove('active');
+                if (step.dataset.step === stepName) {
+                    step.classList.add('active');
+                }
+            });
+        };
+
+        // Get Started button - go to permissions step
+        const getStartedBtn = document.getElementById('onboarding-get-started');
+        if (getStartedBtn) {
+            getStartedBtn.addEventListener('click', () => {
+                showStep('permissions');
+            });
+        }
+
+        // Skip button - complete onboarding without setup
+        const skipBtn = document.getElementById('onboarding-skip');
+        if (skipBtn) {
+            skipBtn.addEventListener('click', () => {
+                this.onboardingService.skipOnboarding();
+                modal.classList.remove('active');
+                this.showToast('Welcome to Concertmaster!', 'success');
+            });
+        }
+
+        // Request microphone permission
+        const micBtn = document.getElementById('request-mic-btn');
+        const micCard = document.getElementById('mic-permission-card');
+        const micStatus = document.getElementById('mic-status');
+        if (micBtn) {
+            micBtn.addEventListener('click', async () => {
+                micBtn.textContent = 'Requesting...';
+                micBtn.disabled = true;
+
+                const result = await this.onboardingService.requestMicrophonePermission();
+
+                if (result.granted) {
+                    this.pendingPermissions.microphone = true;
+                    micCard.classList.add('granted');
+                    micStatus.innerHTML = '<span class="status-granted">Enabled</span>';
+                    micBtn.textContent = 'Enabled';
+                    this.checkOnboardingPermissions();
+                } else {
+                    micBtn.textContent = 'Try Again';
+                    micBtn.disabled = false;
+                    this.showToast('Microphone permission is required for pitch detection', 'error');
+                }
+            });
+        }
+
+        // Request camera permission
+        const cameraBtn = document.getElementById('request-camera-btn');
+        const cameraCard = document.getElementById('camera-permission-card');
+        const cameraStatus = document.getElementById('camera-status');
+        if (cameraBtn) {
+            cameraBtn.addEventListener('click', async () => {
+                cameraBtn.textContent = 'Requesting...';
+                cameraBtn.disabled = true;
+
+                const result = await this.onboardingService.requestCameraPermission();
+
+                if (result.granted) {
+                    this.pendingPermissions.camera = true;
+                    cameraCard.classList.add('granted');
+                    cameraStatus.innerHTML = '<span class="status-granted">Enabled</span>';
+                    cameraBtn.textContent = 'Enabled';
+                    this.checkOnboardingPermissions();
+                } else {
+                    cameraBtn.textContent = 'Try Again';
+                    cameraBtn.disabled = false;
+                    this.showToast('Camera permission is required for sheet music scanning', 'error');
+                }
+            });
+        }
+
+        // Continue button after permissions
+        const permissionsNextBtn = document.getElementById('onboarding-permissions-next');
+        if (permissionsNextBtn) {
+            permissionsNextBtn.addEventListener('click', () => {
+                showStep('instrument');
+            });
+        }
+
+        // Instrument selection cards
+        const instrumentCards = document.querySelectorAll('.instrument-select-card');
+        const calibrationDetails = document.getElementById('calibration-details');
+
+        instrumentCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Update active state
+                instrumentCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+
+                // Get instrument data
+                const instrument = card.dataset.instrument;
+                const range = this.onboardingService.getInstrumentRange(instrument);
+
+                // Update calibration details
+                if (calibrationDetails) {
+                    calibrationDetails.innerHTML = `
+                        <h4>${range.name} Range</h4>
+                        <p>${range.min} Hz to ${range.max} Hz</p>
+                        <p class="calibration-note">Pitch detection will be optimized for ${instrument} harmonics and timbre</p>
+                    `;
+                }
+            });
+        });
+
+        // Finish onboarding
+        const finishBtn = document.getElementById('onboarding-finish');
+        if (finishBtn) {
+            finishBtn.addEventListener('click', () => {
+                // Get selected instrument
+                const activeCard = document.querySelector('.instrument-select-card.active');
+                const instrument = activeCard ? activeCard.dataset.instrument : 'violin';
+
+                // Save preferences
+                this.onboardingService.savePreferences({
+                    instrument: instrument,
+                    confidenceThreshold: this.confidenceThreshold
+                });
+
+                // Update app state
+                this.selectedInstrument = instrument;
+                this.onboardingService.calibrateForInstrument(this.pitchDetector, instrument);
+
+                // Update settings view instrument selector
+                this.updateInstrumentSelector(instrument);
+
+                // Complete onboarding
+                this.onboardingService.completeOnboarding();
+                modal.classList.remove('active');
+
+                this.showToast('Setup complete! Ready to practice.', 'success');
+            });
+        }
+    }
+
+    checkOnboardingPermissions() {
+        const nextBtn = document.getElementById('onboarding-permissions-next');
+        if (nextBtn) {
+            // Enable continue if at least microphone is granted (camera is optional for OMR)
+            nextBtn.disabled = !this.pendingPermissions.microphone;
+        }
+    }
+
+    updateInstrumentSelector(instrument) {
+        // Update settings view instrument selector
+        const instrumentOptions = document.querySelectorAll('.instrument-option');
+        instrumentOptions.forEach(option => {
+            option.classList.remove('active');
+            if (option.dataset.instrument === instrument) {
+                option.classList.add('active');
+            }
+        });
+
+        // Update practice view instrument badge
+        const instrumentBadge = document.getElementById('current-instrument');
+        if (instrumentBadge) {
+            const range = this.onboardingService.getInstrumentRange(instrument);
+            instrumentBadge.textContent = range.name;
+        }
     }
 
     setupNavigation() {
@@ -331,6 +546,24 @@ class ConcertmasterApp {
     }
 
     setupSettings() {
+        // Initialize settings from saved preferences
+        const prefs = this.onboardingService.getPreferences();
+
+        // Set initial instrument selector state
+        document.querySelectorAll('.instrument-option').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.instrument === prefs.instrument);
+        });
+
+        // Set initial sensitivity slider
+        const sensitivitySlider = document.getElementById('sensitivity-slider');
+        const sensitivityValue = document.getElementById('sensitivity-value');
+        if (sensitivitySlider) {
+            sensitivitySlider.value = prefs.confidenceThreshold;
+        }
+        if (sensitivityValue) {
+            sensitivityValue.textContent = prefs.confidenceThreshold.toFixed(2);
+        }
+
         // Instrument selection
         document.querySelectorAll('.instrument-option').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -340,26 +573,34 @@ class ConcertmasterApp {
 
                 // Update confidence threshold based on instrument
                 this.updateInstrumentSettings();
+
+                // Save to localStorage via onboarding service
+                this.onboardingService.savePreferences({
+                    instrument: this.selectedInstrument
+                });
+
+                // Update practice view instrument badge
+                this.updateInstrumentSelector(this.selectedInstrument);
             });
         });
 
         // Sensitivity slider
-        const sensitivitySlider = document.getElementById('sensitivity-slider');
-        const sensitivityValue = document.getElementById('sensitivity-value');
-
         sensitivitySlider?.addEventListener('input', (e) => {
             const value = parseFloat(e.target.value);
             this.confidenceThreshold = value;
             this.pitchDetector.confidenceThreshold = value;
             if (sensitivityValue) sensitivityValue.textContent = value.toFixed(2);
+
+            // Save to localStorage
+            this.onboardingService.savePreferences({
+                confidenceThreshold: value
+            });
         });
     }
 
     updateInstrumentSettings() {
-        // Adjust pitch detection range based on instrument
-        const range = this.pitchDetector.getInstrumentRange(this.selectedInstrument);
-        this.pitchDetector.minFrequency = range.min;
-        this.pitchDetector.maxFrequency = range.max;
+        // Adjust pitch detection range based on instrument using onboarding service
+        this.onboardingService.calibrateForInstrument(this.pitchDetector, this.selectedInstrument);
     }
 
     async loadLibrary() {

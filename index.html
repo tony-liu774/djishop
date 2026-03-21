@@ -407,12 +407,191 @@
         </div>
     </div>
 
+    <!-- Onboarding Modal -->
+    <div class="modal" id="onboarding-modal">
+        <div class="onboarding-backdrop"></div>
+        <div class="onboarding-content">
+            <!-- Step 1: Welcome -->
+            <div class="onboarding-step active" data-step="welcome">
+                <div class="onboarding-header">
+                    <div class="onboarding-logo">
+                        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="32" cy="32" r="28"/>
+                            <path d="M32 16v32M24 24l8 8 8-8M24 40l8-8 8 8"/>
+                        </svg>
+                    </div>
+                    <h1>Welcome to Concertmaster</h1>
+                    <p class="onboarding-subtitle">Your personal bowed string instrument practice companion</p>
+                </div>
+                <div class="onboarding-features">
+                    <div class="feature-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        </svg>
+                        <div>
+                            <h4>Real-time Pitch Detection</h4>
+                            <p>Listen to your playing and provide instant feedback</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <div>
+                            <h4>Sheet Music Analysis</h4>
+                            <p>Scan or import your sheet music for practice</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v6l4 2"/>
+                            <circle cx="12" cy="14" r="8"/>
+                        </svg>
+                        <div>
+                            <h4>Performance Tracking</h4>
+                            <p>Track your progress with detailed practice reports</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="onboarding-actions">
+                    <button class="btn btn-primary btn-large" id="onboarding-get-started">
+                        Get Started
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-ghost" id="onboarding-skip">Skip for now</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Permissions -->
+            <div class="onboarding-step" data-step="permissions">
+                <div class="onboarding-header">
+                    <div class="onboarding-icon permission-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h2>Enable Permissions</h2>
+                    <p class="onboarding-subtitle">We need access to your microphone and camera</p>
+                </div>
+
+                <div class="permission-cards">
+                    <div class="permission-card" id="mic-permission-card">
+                        <div class="permission-icon-large">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                <line x1="12" y1="19" x2="12" y2="23"/>
+                                <line x1="8" y1="23" x2="16" y2="23"/>
+                            </svg>
+                        </div>
+                        <h3>Microphone</h3>
+                        <p>Needed for real-time pitch detection and performance analysis</p>
+                        <button class="btn btn-secondary" id="request-mic-btn">Enable Microphone</button>
+                        <div class="permission-status" id="mic-status">
+                            <span class="status-pending">Not enabled</span>
+                        </div>
+                    </div>
+
+                    <div class="permission-card" id="camera-permission-card">
+                        <div class="permission-icon-large">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                        </div>
+                        <h3>Camera</h3>
+                        <p>Needed for scanning sheet music using Optical Music Recognition</p>
+                        <button class="btn btn-secondary" id="request-camera-btn">Enable Camera</button>
+                        <div class="permission-status" id="camera-status">
+                            <span class="status-pending">Not enabled</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="onboarding-actions">
+                    <button class="btn btn-primary btn-large" id="onboarding-permissions-next" disabled>
+                        Continue
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Instrument Selection -->
+            <div class="onboarding-step" data-step="instrument">
+                <div class="onboarding-header">
+                    <div class="onboarding-icon instrument-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v20M8 6c2-2 6-2 8 0M6 10c3-2 9-2 12 0M8 16c2-2 6-2 8 0M10 22c1-2 5-2 4 0"/>
+                        </svg>
+                    </div>
+                    <h2>Select Your Instrument</h2>
+                    <p class="onboarding-subtitle">This calibrates the pitch detection for your instrument</p>
+                </div>
+
+                <div class="instrument-selection-grid">
+                    <button class="instrument-select-card active" data-instrument="violin">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M24 4v40M16 12c4-4 12-4 16 0M12 20c6-4 18-4 24 0M16 32c4-4 12-4 16 0M20 44c2-4 10-4 8 0"/>
+                        </svg>
+                        <span class="instrument-name">Violin</span>
+                        <span class="instrument-range">G3 - E7</span>
+                    </button>
+                    <button class="instrument-select-card" data-instrument="viola">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M24 4v40M16 10c4-3 10-3 16 0M12 18c5-3 11-3 24 0M16 30c4-3 10-3 16 0"/>
+                        </svg>
+                        <span class="instrument-name">Viola</span>
+                        <span class="instrument-range">C3 - A6</span>
+                    </button>
+                    <button class="instrument-select-card" data-instrument="cello">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M24 4v40M14 8c5-2 12-2 20 0M10 16c6-3 16-3 28 0M14 28c4-3 12-3 20 0"/>
+                        </svg>
+                        <span class="instrument-name">Cello</span>
+                        <span class="instrument-range">C2 - B5</span>
+                    </button>
+                    <button class="instrument-select-card" data-instrument="bass">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M24 4v40M16 12c4-2 10-2 16 0M12 24c4-3 10-3 24 0"/>
+                        </svg>
+                        <span class="instrument-name">Double Bass</span>
+                        <span class="instrument-range">E1 - C4</span>
+                    </button>
+                </div>
+
+                <div class="calibration-info">
+                    <div class="calibration-details" id="calibration-details">
+                        <h4>Violin Range</h4>
+                        <p>196 Hz (G3) to 2637 Hz (E7)</p>
+                        <p class="calibration-note">Pitch detection will be optimized for violin harmonics and timbre</p>
+                    </div>
+                </div>
+
+                <div class="onboarding-actions">
+                    <button class="btn btn-primary btn-large" id="onboarding-finish">
+                        Start Practicing
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div class="toast-container" id="toast-container"></div>
 
     <!-- Scripts -->
     <script src="src/js/models/sheet-music.js"></script>
     <script src="src/js/parsers/musicxml-parser.js"></script>
+    <script src="src/js/services/onboarding-service.js"></script>
     <script src="src/js/audio/audio-engine.js"></script>
     <script src="src/js/audio/pitch-detector.js"></script>
     <script src="src/js/audio/instrument-detector.js"></script>
