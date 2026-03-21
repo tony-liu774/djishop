@@ -142,7 +142,28 @@
                 </div>
 
                 <div class="sheet-music-container" id="sheet-music-container">
-                    <div class="sheet-music-placeholder">
+                    <div class="zoom-controls" id="zoom-controls">
+                        <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </button>
+                        <span class="zoom-level" id="zoom-level">100%</span>
+                        <button class="zoom-btn" id="zoom-in-btn" title="Zoom In">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                        </button>
+                        <button class="zoom-btn" id="zoom-reset-btn" title="Reset Zoom">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                                <path d="M3 3v5h5"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="sheet-music-wrapper" id="sheet-music-wrapper">
+                        <div class="sheet-music-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
@@ -151,6 +172,7 @@
                             <polyline points="10 9 9 9 8 9"/>
                         </svg>
                         <p>Select a piece from your library to start practicing</p>
+                    </div>
                     </div>
                 </div>
 
@@ -338,6 +360,73 @@
             </div>
         </div>
 
+        <!-- Upload Modal with Metadata -->
+        <div class="modal" id="upload-modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <button class="modal-close" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+                <h2>Add to Library</h2>
+                <form id="upload-form" class="upload-form">
+                    <div class="form-group">
+                        <label for="score-title">Title *</label>
+                        <input type="text" id="score-title" required placeholder="e.g., Bach - Cello Suite No. 1">
+                    </div>
+                    <div class="form-group">
+                        <label for="score-composer">Composer *</label>
+                        <input type="text" id="score-composer" required placeholder="e.g., J.S. Bach">
+                    </div>
+                    <div class="form-group">
+                        <label for="score-instrument">Instrument</label>
+                        <select id="score-instrument">
+                            <option value="violin">Violin</option>
+                            <option value="viola">Viola</option>
+                            <option value="cello">Cello</option>
+                            <option value="bass">Double Bass</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Difficulty</label>
+                        <div class="difficulty-rating" id="difficulty-rating">
+                            <button type="button" class="star-btn" data-rating="1">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn" data-rating="2">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn" data-rating="3">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn" data-rating="4">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                            <button type="button" class="star-btn" data-rating="5">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            </button>
+                        </div>
+                        <input type="hidden" id="score-difficulty" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="score-tags">Tags (comma separated)</label>
+                        <input type="text" id="score-tags" placeholder="e.g., baroque, beginner, scales">
+                    </div>
+                    <div class="form-group">
+                        <label for="score-file">File *</label>
+                        <input type="file" id="score-file" accept=".musicxml,.xml,.mei,.pdf" required>
+                        <small>MusicXML, MEI, or PDF</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-upload-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add to Library</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- IMSLP Search Modal -->
         <div class="modal" id="imslp-modal">
             <div class="modal-backdrop"></div>
@@ -419,6 +508,116 @@
                 </div>
             </div>
         </div>
+
+        <!-- Scan Music Modal -->
+        <div class="modal" id="scan-modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content scan-modal-content">
+                <button class="modal-close" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+                <h2>Scan Music</h2>
+                <div id="scan-content">
+                    <div class="scan-source-options">
+                        <div class="scan-source-option" id="scan-camera-option">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            <span>Use Camera</span>
+                            <small>Take a photo of sheet music</small>
+                        </div>
+                        <div class="scan-source-option" id="scan-file-option">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            <span>Upload Image</span>
+                            <small>Select image from device</small>
+                        </div>
+                    </div>
+                    <input type="file" id="scan-file-input" accept="image/*" hidden>
+                </div>
+                <div id="scan-progress" class="scan-progress" style="display: none;">
+                    <div class="scan-progress-spinner"></div>
+                    <p class="scan-progress-text" id="scan-progress-text">Processing image...</p>
+                    <div class="scan-progress-steps">
+                        <div class="scan-progress-step" id="step-1"></div>
+                        <div class="scan-progress-step" id="step-2"></div>
+                        <div class="scan-progress-step" id="step-3"></div>
+                        <div class="scan-progress-step" id="step-4"></div>
+                        <div class="scan-progress-step" id="step-5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div class="modal" id="share-modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content share-modal-content">
+                <button class="modal-close" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+                <h2>Share Score</h2>
+                <form class="upload-form" id="share-form">
+                    <div class="form-group">
+                        <label for="share-title">Title</label>
+                        <input type="text" id="share-title" placeholder="Enter score title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="share-composer">Composer</label>
+                        <input type="text" id="share-composer" placeholder="Enter composer name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="share-difficulty">Difficulty</label>
+                            <select id="share-difficulty">
+                                <option value="1">Beginner</option>
+                                <option value="2">Easy</option>
+                                <option value="3" selected>Medium</option>
+                                <option value="4">Hard</option>
+                                <option value="5">Expert</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="share-instrument">Instrument</label>
+                            <select id="share-instrument">
+                                <option value="violin">Violin</option>
+                                <option value="viola">Viola</option>
+                                <option value="cello">Cello</option>
+                                <option value="bass">Bass</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="share-tags">Tags (comma separated)</label>
+                        <input type="text" id="share-tags" placeholder="e.g., baroque, classical, études">
+                    </div>
+                    <div class="form-group">
+                        <label for="share-file">Score File</label>
+                        <input type="file" id="share-file" accept=".musicxml,.xml,.pdf,image/*" required>
+                        <div class="file-preview" id="file-preview" style="display: none;">
+                            <img class="file-preview-thumbnail" id="preview-thumbnail" src="" alt="Preview">
+                            <div class="file-preview-info">
+                                <div class="file-preview-name" id="preview-name"></div>
+                                <div class="file-preview-size" id="preview-size"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="display: flex; gap: var(--space-3); margin-top: var(--space-4);">
+                        <button type="button" class="btn btn-secondary" id="cancel-share-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="upload-share-btn">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Notifications -->
@@ -427,6 +626,8 @@
     <!-- Scripts -->
     <script src="src/js/models/sheet-music.js"></script>
     <script src="src/js/parsers/musicxml-parser.js"></script>
+    <script src="src/js/services/library-service.js"></script>
+    <script src="src/js/services/omr-client.js"></script>
     <script src="src/js/audio/audio-engine.js"></script>
     <script src="src/js/audio/pitch-detector.js"></script>
     <script src="src/js/audio/instrument-detector.js"></script>
@@ -435,6 +636,9 @@
     <script src="src/js/analysis/intonation-analyzer.js"></script>
     <script src="src/js/components/sheet-music-renderer.js"></script>
     <script src="src/js/components/heat-map-renderer.js"></script>
+    <script src="src/js/components/zoom-controller.js"></script>
+    <script src="src/js/services/library-service.js"></script>
+    <script src="src/js/services/omr-client.js"></script>
     <script src="src/js/services/performance-history.js"></script>
     <script src="src/js/metrics/accuracy-scorer.js"></script>
     <script src="src/js/metrics/rhythm-analyzer.js"></script>
