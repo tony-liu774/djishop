@@ -23,6 +23,10 @@ class ConcertmasterApp {
         this.sessionData = null;
         this.accuracyScorer = null;
 
+        // Post-session AI Summary modules
+        this.aiSummaryGenerator = null;
+        this.practiceLoopController = null;
+
         // UI Components
         this.sheetMusicRenderer = null;
         this.heatMapRenderer = null;
@@ -71,6 +75,20 @@ class ConcertmasterApp {
         this.performanceComparator = new PerformanceComparator();
         this.rhythmAnalyzer = new RhythmAnalyzer();
         this.accuracyScorer = new AccuracyScorer();
+
+        // Create AI Summary modules
+        this.aiSummaryGenerator = new AISummaryGenerator();
+        this.practiceLoopController = new PracticeLoopController();
+
+        // Setup practice loop callbacks
+        this.practiceLoopController.setOnLoopChange((state) => {
+            console.log('Practice loop changed:', state);
+        });
+
+        this.practiceLoopController.setOnComplete((result) => {
+            console.log('Practice loop completed:', result);
+            this.showToast('Practice loop completed! Great work!', 'success');
+        });
 
         // Get DOM elements
         this.views = {
@@ -557,6 +575,11 @@ class ConcertmasterApp {
             timingAccuracy: []
         };
 
+        // Initialize AI Summary Generator for this session
+        if (this.aiSummaryGenerator) {
+            this.aiSummaryGenerator.startSession(this.currentScore.id);
+        }
+
         // Update UI
         const startBtn = document.getElementById('start-practice-btn');
         startBtn.innerHTML = `
@@ -644,6 +667,19 @@ class ConcertmasterApp {
                                 accuracy: accuracy,
                                 matched: comparison.matched
                             });
+
+                            // Log deviation to AI Summary Generator
+                            if (this.aiSummaryGenerator && !comparison.matched) {
+                                this.aiSummaryGenerator.logPitchDeviation({
+                                    measure: measure,
+                                    beat: 1, // Default beat
+                                    expectedPitch: comparison.expectedNote ? comparison.expectedNote.getName() + comparison.expectedNote.octave : '?',
+                                    actualPitch: result.name + result.octave,
+                                    deviationCents: result.centsDeviation,
+                                    expectedFrequency: expectedFreq,
+                                    actualFrequency: result.frequency
+                                });
+                            }
                         }
                     }
                 }
@@ -705,7 +741,7 @@ class ConcertmasterApp {
         }
     }
 
-    showSessionSummary(score) {
+    async showSessionSummary(score) {
         const modal = document.getElementById('session-summary-modal');
         if (!modal) return;
 
@@ -722,11 +758,147 @@ class ConcertmasterApp {
         // Update heat map with session data
         if (this.heatMapRenderer && this.sessionData) {
             this.heatMapRenderer.setData(this.sessionData);
+            // Enable post-session mode with Deep Navy background
+            this.heatMapRenderer.enablePostSessionMode(true);
             this.heatMapRenderer.render();
         }
 
+        // Show AI feedback section
+        const aiSection = document.getElementById('ai-feedback-section');
+        const aiLoading = document.getElementById('ai-loading');
+        const aiAssessment = document.getElementById('ai-assessment');
+        const aiStrengths = document.getElementById('ai-strengths');
+        const aiGuidance = document.getElementById('ai-guidance');
+        const practiceLoopSection = document.getElementById('practice-loop-section');
+
+        if (aiSection) {
+            aiSection.style.display = 'block';
+            // Show loading state
+            if (aiLoading) aiLoading.style.display = 'flex';
+            if (aiAssessment) aiAssessment.innerHTML = '';
+            if (aiStrengths) aiStrengths.innerHTML = '';
+            if (aiGuidance) aiGuidance.innerHTML = '';
+            if (practiceLoopSection) practiceLoopSection.style.display = 'none';
+        }
+
+        // Generate AI summary
+        let aiSummary = null;
+        if (this.aiSummaryGenerator) {
+            aiSummary = await this.aiSummaryGenerator.generateSummary();
+        }
+
+        // Hide loading, show AI feedback
+        if (aiLoading) aiLoading.style.display = 'none';
+
+        if (aiSummary && aiSummary.ai) {
+            const ai = aiSummary.ai;
+
+            // Display overall assessment
+            if (aiAssessment) {
+                aiAssessment.textContent = ai.overall_assessment || 'Great practice session!';
+            }
+
+            // Display strengths
+            if (aiStrengths && ai.strengths) {
+                aiStrengths.innerHTML = `
+                    <h4>Strengths</h4>
+                    <ul>
+                        ${ai.strengths.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                `;
+            }
+
+            // Display guidance
+            if (aiGuidance) {
+                aiGuidance.innerHTML = `
+                    <h4>Focus Areas</h4>
+                    <p>${ai.specific_guidance || ''}</p>
+                `;
+            }
+
+            // Update heat map with problem measures
+            if (this.heatMapRenderer && ai.recommended_measures) {
+                this.heatMapRenderer.setProblemMeasures(ai.recommended_measures);
+                this.heatMapRenderer.render();
+            }
+
+            // Show practice loop section
+            if (practiceLoopSection && ai.recommended_measures && ai.recommended_measures.length > 0) {
+                const loopMeasuresEl = document.getElementById('loop-measures');
+                const loopTempoEl = document.getElementById('loop-tempo-value');
+
+                if (loopMeasuresEl) {
+                    loopMeasuresEl.innerHTML = ai.recommended_measures
+                        .map(m => `<span class="loop-measure">M${m}</span>`)
+                        .join('');
+                }
+
+                if (loopTempoEl) {
+                    loopTempoEl.textContent = (ai.suggested_tempo || 80) + ' BPM';
+                }
+
+                // Initialize practice loop controller
+                if (this.practiceLoopController) {
+                    this.practiceLoopController.init({
+                        measures: ai.recommended_measures,
+                        suggestedTempo: ai.suggested_tempo || 80,
+                        maxLoops: 5
+                    });
+                }
+
+                practiceLoopSection.style.display = 'block';
+            }
+        } else {
+            // Show fallback feedback if no AI summary
+            if (aiAssessment) {
+                const stats = this.aiSummaryGenerator?.sessionLogger?.getSummaryStats();
+                const problemMeasures = stats?.problem_measures?.slice(0, 3).map(m => m.measure) || [];
+                aiAssessment.textContent = `You had ${stats?.pitch_deviation_count || 0} pitch deviations and ${stats?.rhythm_deviation_count || 0} timing issues. Focus on measures ${problemMeasures.join(', ') || '1-3'} to improve.`;
+
+                if (loopMeasuresEl && problemMeasures.length > 0) {
+                    loopMeasuresEl.innerHTML = problemMeasures
+                        .map(m => `<span class="loop-measure">M${m}</span>`)
+                        .join('');
+                }
+
+                if (practiceLoopSection) practiceLoopSection.style.display = 'block';
+            }
+        }
+
+        // Setup practice loop button
+        document.getElementById('start-loop-btn')?.addEventListener('click', () => {
+            this.startPracticeLoop();
+        });
+
         // Show modal
         modal.classList.add('active');
+    }
+
+    /**
+     * Start the practice loop for problematic measures
+     */
+    startPracticeLoop() {
+        if (this.practiceLoopController) {
+            this.practiceLoopController.start();
+
+            // Adjust metronome tempo
+            const suggestedTempo = this.practiceLoopController.getRecommendedTempo();
+            this.metronome.setBPM(suggestedTempo);
+
+            // Update UI
+            const tempoSlider = document.getElementById('tempo-slider');
+            const bpmDisplay = document.getElementById('bpm-display');
+            if (tempoSlider) tempoSlider.value = suggestedTempo;
+            if (bpmDisplay) bpmDisplay.textContent = suggestedTempo;
+
+            // Close modal
+            document.getElementById('session-summary-modal')?.classList.remove('active');
+
+            this.showToast(`Practice loop started at ${suggestedTempo} BPM`, 'info');
+
+            // Start practice
+            this.startPractice();
+        }
     }
 
     searchIMSLP() {

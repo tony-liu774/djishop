@@ -364,7 +364,7 @@
         <!-- Session Summary Modal -->
         <div class="modal" id="session-summary-modal">
             <div class="modal-backdrop"></div>
-            <div class="modal-content modal-large">
+            <div class="modal-content modal-large modal-dark">
                 <button class="modal-close" aria-label="Close">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -391,13 +391,68 @@
                             <span class="breakdown-value" id="session-duration">5:32</span>
                         </div>
                     </div>
+
+                    <!-- AI Feedback Section -->
+                    <div class="ai-feedback-section" id="ai-feedback-section" style="display: none;">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ai-icon">
+                                <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+                                <circle cx="8" cy="14" r="2"/>
+                                <circle cx="16" cy="14" r="2"/>
+                            </svg>
+                            AI Coach Feedback
+                        </h3>
+                        <div class="ai-assessment" id="ai-assessment">
+                            <!-- AI assessment will be inserted here -->
+                        </div>
+                        <div class="ai-strengths" id="ai-strengths">
+                            <!-- Strengths will be inserted here -->
+                        </div>
+                        <div class="ai-guidance" id="ai-guidance">
+                            <!-- Specific guidance will be inserted here -->
+                        </div>
+                        <div class="ai-loading" id="ai-loading">
+                            <div class="loading-spinner"></div>
+                            <span>Analyzing your performance...</span>
+                        </div>
+                    </div>
+
                     <div class="heatmap-section">
                         <h3>Practice Areas</h3>
-                        <p class="heatmap-note">Measures colored red need the most practice</p>
+                        <p class="heatmap-note">Measures colored crimson need the most practice</p>
                         <div class="heatmap-preview" id="heatmap-preview">
                             <!-- Heat map will be rendered here -->
                         </div>
                     </div>
+
+                    <!-- Practice Loop Section -->
+                    <div class="practice-loop-section" id="practice-loop-section" style="display: none;">
+                        <h3>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="loop-icon">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <polyline points="1 20 1 14 7 14"/>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                            </svg>
+                            Smart Practice Loop
+                        </h3>
+                        <p class="loop-description" id="loop-description">
+                            Focus on these measures at a slower tempo:
+                        </p>
+                        <div class="loop-measures" id="loop-measures">
+                            <!-- Loop measures will be inserted here -->
+                        </div>
+                        <div class="loop-tempo">
+                            <span class="tempo-label">Suggested Tempo:</span>
+                            <span class="tempo-value" id="loop-tempo-value">80 BPM</span>
+                        </div>
+                        <button class="btn btn-primary btn-loop" id="start-loop-btn">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            Start Practice Loop
+                        </button>
+                    </div>
+
                     <div class="summary-actions">
                         <button class="btn btn-secondary" id="practice-again-btn">Practice Again</button>
                         <button class="btn btn-primary" id="view-details-btn">View Details</button>
@@ -418,8 +473,12 @@
     <script src="src/js/audio/instrument-detector.js"></script>
     <script src="src/js/audio/metronome.js"></script>
     <script src="src/js/analysis/performance-comparator.js"></script>
+    <script src="src/js/analysis/session-logger.js"></script>
+    <script src="src/js/analysis/ai-summary-generator.js"></script>
+    <script src="src/js/services/llm-service.js"></script>
     <script src="src/js/components/sheet-music-renderer.js"></script>
     <script src="src/js/components/heat-map-renderer.js"></script>
+    <script src="src/js/components/practice-loop.js"></script>
     <script src="src/js/services/performance-history.js"></script>
     <script src="src/js/metrics/accuracy-scorer.js"></script>
     <script src="src/js/metrics/rhythm-analyzer.js"></script>

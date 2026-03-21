@@ -5,6 +5,7 @@ const logger = require('./middleware/logger');
 const cors = require('./middleware/cors');
 const rateLimiter = require('./middleware/rateLimiter');
 const healthRoutes = require('./routes/health');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 
@@ -44,6 +45,9 @@ app.use(express.static('.', { index: 'index.html' }));
 
 // Health check routes
 app.use('/health', healthRoutes);
+
+// AI routes (GPT-4o-mini integration)
+app.use('/api', aiRoutes);
 
 // API routes (placeholder for future routes)
 app.use('/api', (req, res) => {
