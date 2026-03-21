@@ -43,7 +43,6 @@ class LLMService {
                 },
                 body: JSON.stringify({
                     prompt: prompt,
-                    session_data: sessionData,
                     instrument: this.instrument
                 })
             });
