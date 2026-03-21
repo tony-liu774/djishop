@@ -1843,3 +1843,453 @@ a:hover {
 .lazy-loaded {
     opacity: 1;
 }
+
+/* ===========================================
+   Precision Tuner Styles
+   =========================================== */
+
+.tuner-view {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: var(--space-4);
+}
+
+.tuner-header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.tuner-header h1 {
+    margin-bottom: var(--space-2);
+}
+
+.tuner-instrument-selector {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+    flex-wrap: wrap;
+}
+
+.tuner-instrument-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tuner-instrument-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.tuner-instrument-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--bg-deep);
+}
+
+.tuner-instrument-btn .instrument-icon {
+    font-size: 1.5rem;
+}
+
+/* Tuner Display */
+.tuner-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-8);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-6);
+}
+
+.note-reference {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.reference-note {
+    font-family: var(--font-mono);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Needle Gauge */
+.needle-gauge-container {
+    width: 280px;
+    height: 160px;
+    position: relative;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.needle-gauge-container.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.needle-gauge {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.gauge-arc {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 140px;
+    border: 3px solid var(--border);
+    border-bottom: none;
+    border-radius: 140px 140px 0 0;
+    background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+    box-shadow: inset 0 -10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.gauge-arc::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    right: 10%;
+    height: 130px;
+    border: 2px solid var(--primary);
+    border-bottom: none;
+    border-radius: 130px 130px 0 0;
+    opacity: 0.3;
+}
+
+.gauge-markings {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px;
+}
+
+.marking {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+.marking.center {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.marking.flat,
+.marking.sharp {
+    color: var(--error-light);
+}
+
+/* Needle */
+.needle {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 4px;
+    height: 110px;
+    background: linear-gradient(180deg, var(--primary-light) 0%, var(--primary) 100%);
+    border-radius: 2px 2px 0 0;
+    transform-origin: bottom center;
+    transform: rotate(0deg);
+    transition: transform 150ms ease-out;
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.needle-glow {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    box-shadow:
+        0 0 20px var(--primary),
+        0 0 40px var(--primary-glow),
+        0 0 60px var(--primary-glow);
+    animation: needleGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes needleGlow {
+    from {
+        box-shadow:
+            0 0 15px var(--primary),
+            0 0 30px var(--primary-glow),
+            0 0 45px var(--primary-glow);
+    }
+    to {
+        box-shadow:
+            0 0 25px var(--primary),
+            0 0 50px var(--primary-glow),
+            0 0 80px var(--primary-glow);
+    }
+}
+
+.gauge-center-mark {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+/* Current Note Display */
+.current-note-display {
+    text-align: center;
+}
+
+.current-note {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    text-shadow: 0 0 30px var(--primary-glow);
+}
+
+.current-octave {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xl);
+    color: var(--text-muted);
+    margin-top: var(--space-1);
+}
+
+/* Pitch Feedback */
+.pitch-feedback {
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all var(--transition-fast);
+}
+
+.pitch-feedback.waiting {
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+}
+
+.pitch-feedback.in-tune {
+    background: var(--success);
+    color: var(--text-primary);
+    box-shadow: 0 0 20px var(--success-glow);
+    animation: inTunePulse 1s ease-in-out infinite;
+}
+
+@keyframes inTunePulse {
+    0%, 100% {
+        box-shadow: 0 0 20px var(--success-glow);
+    }
+    50% {
+        box-shadow: 0 0 35px var(--success-glow);
+    }
+}
+
+.pitch-feedback.sharp,
+.pitch-feedback.flat {
+    background: var(--error);
+    color: var(--text-primary);
+    box-shadow: 0 0 15px var(--error-glow);
+}
+
+/* Cents Display */
+.cents-display {
+    font-family: var(--font-mono);
+    font-size: var(--text-3xl);
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.cents-display.emerald {
+    color: var(--success-light);
+}
+
+.cents-display.crimson {
+    color: var(--error-light);
+}
+
+.cents-unit {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-left: var(--space-1);
+}
+
+/* Frequency Display */
+.frequency-display {
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
+    color: var(--text-muted);
+}
+
+.frequency-value {
+    color: var(--text-secondary);
+}
+
+/* Tuner Controls */
+.tuner-controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-6);
+}
+
+.tuner-start-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-8);
+    background: var(--primary);
+    border: none;
+    border-radius: var(--radius-full);
+    color: var(--bg-deep);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.tuner-start-btn:hover {
+    background: var(--primary-light);
+    box-shadow: 0 0 30px var(--primary-glow);
+    transform: scale(1.02);
+}
+
+.tuner-start-btn.active {
+    background: var(--error);
+    box-shadow: 0 0 20px var(--error-glow);
+}
+
+.tuner-start-btn.active:hover {
+    background: var(--error-light);
+    box-shadow: 0 0 30px var(--error-glow);
+}
+
+.tuner-start-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Open Strings Display */
+.tuner-open-strings {
+    text-align: center;
+    padding: var(--space-4);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.open-strings-label {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+}
+
+.open-strings-list {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.open-string-note {
+    display: inline-block;
+    padding: var(--space-2) var(--space-4);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    color: var(--primary);
+    transition: all var(--transition-fast);
+}
+
+.open-string-note:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--primary-glow);
+}
+
+/* Tuner Status */
+.tuner-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.tuner-status .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all var(--transition-fast);
+}
+
+.tuner-status.active .status-indicator {
+    background: var(--success-light);
+    box-shadow: 0 0 10px var(--success-glow);
+    animation: statusPulse 1.5s ease-in-out infinite;
+}
+
+.tuner-status.error .status-indicator {
+    background: var(--error-light);
+    box-shadow: 0 0 10px var(--error-glow);
+}
+
+@keyframes statusPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Responsive Tuner */
+@media (max-width: 480px) {
+    .tuner-display {
+        padding: var(--space-6);
+    }
+
+    .needle-gauge-container {
+        width: 240px;
+        height: 140px;
+    }
+
+    .current-note {
+        font-size: 3.5rem;
+    }
+}
+}
