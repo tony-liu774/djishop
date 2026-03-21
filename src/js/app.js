@@ -26,6 +26,7 @@ class ConcertmasterApp {
         // UI Components
         this.sheetMusicRenderer = null;
         this.heatMapRenderer = null;
+        this.precisionTuner = null;
 
         // DOM Elements
         this.views = {};
@@ -77,6 +78,7 @@ class ConcertmasterApp {
             library: document.getElementById('library-view'),
             practice: document.getElementById('practice-view'),
             metronome: document.getElementById('metronome-view'),
+            tuner: document.getElementById('tuner-view'),
             settings: document.getElementById('settings-view')
         };
 
@@ -99,6 +101,12 @@ class ConcertmasterApp {
         if (heatmapPreview) {
             this.heatMapRenderer = new HeatMapRenderer(heatmapPreview);
             this.heatMapRenderer.init();
+        }
+
+        // Initialize precision tuner
+        const tunerContainer = document.getElementById('tuner-container');
+        if (tunerContainer) {
+            this.precisionTuner = new PrecisionTuner(tunerContainer);
         }
     }
 

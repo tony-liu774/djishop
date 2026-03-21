@@ -29,6 +29,7 @@
                     <a href="#library" class="nav-link active">Library</a>
                     <a href="#practice" class="nav-link">Practice</a>
                     <a href="#metronome" class="nav-link">Metronome</a>
+                    <a href="#tuner" class="nav-link">Tuner</a>
                     <a href="#settings" class="nav-link">Settings</a>
                 </div>
                 <button class="mobile-menu-btn mobile-only" aria-label="Menu">
@@ -62,6 +63,13 @@
                     <circle cx="12" cy="14" r="8"/>
                 </svg>
                 <span>Metronome</span>
+            </a>
+            <a href="#tuner" class="mobile-nav-link">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 6v6l4 2"/>
+                </svg>
+                <span>Tuner</span>
             </a>
             <a href="#settings" class="mobile-nav-link">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -233,6 +241,11 @@
                     </button>
                     <button class="btn btn-ghost" id="reset-tempo-btn">Reset</button>
                 </div>
+            </section>
+
+            <!-- Tuner View -->
+            <section id="tuner-view" class="view">
+                <div id="tuner-container"></div>
             </section>
 
             <!-- Settings View -->
@@ -420,6 +433,7 @@
     <script src="src/js/analysis/performance-comparator.js"></script>
     <script src="src/js/components/sheet-music-renderer.js"></script>
     <script src="src/js/components/heat-map-renderer.js"></script>
+    <script src="src/js/components/tuner.js"></script>
     <script src="src/js/services/performance-history.js"></script>
     <script src="src/js/metrics/accuracy-scorer.js"></script>
     <script src="src/js/metrics/rhythm-analyzer.js"></script>
